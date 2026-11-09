@@ -1,0 +1,10 @@
+node_modules/
+dist/
+workspace/
+workspace_legacy_archive/
+__pycache__/
+*.pyc
+.env
+_found/
+.dist.deploy.bak/
+DEPLOYMENT.md
