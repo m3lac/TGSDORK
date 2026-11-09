@@ -40,11 +40,79 @@ function saveJson(filePath: string, data: any): void {
   }
 }
 
+// Build polished plain-text and HTML OTP verification email
+function buildOtpEmailContent(recipientEmail: string, code: string): {
+  subject: string;
+  text: string;
+  html: string;
+} {
+  const subject = `${code} — Kode Verifikasi Masuk TGSDORK Studio`;
+  const text = [
+    `Yth. Peneliti (${recipientEmail}),`,
+    ``,
+    `Kami menerima permintaan akses masuk ke ruang kerja TGSDORK Academic Studio menggunakan alamat email ini.`,
+    `Silakan masukkan 6 digit kode verifikasi berikut pada halaman login:`,
+    ``,
+    `    ${code}`,
+    ``,
+    `Kode ini berlaku selama 10 menit dan hanya dapat digunakan untuk satu kali sesi masuk.`,
+    ``,
+    `Demi keamanan dokumen dan arsip riset Anda, mohon tidak membagikan kode ini kepada siapa pun. Apabila Anda tidak merasa melakukan permintaan masuk ini, abaikan pesan email ini.`,
+    ``,
+    `Salam hangat,`,
+    `Tim TGSDORK Academic Studio`,
+  ].join('\n');
+
+  const html = `<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${subject}</title>
+</head>
+<body style="margin:0;padding:28px 16px;background-color:#090a0f;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#f8fafc;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:520px;margin:0 auto;background-color:#12151e;border:1px solid #232838;border-radius:18px;overflow:hidden;">
+    <tr>
+      <td style="padding:24px 28px 18px;border-bottom:1px solid #1e2330;background-color:#0d1017;">
+        <div style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#38bdf8;margin-bottom:4px;">TGSDORK Academic Studio</div>
+        <div style="font-size:19px;font-weight:700;color:#ffffff;letter-spacing:-0.01em;">Verifikasi Akses Ruang Kerja</div>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:26px 28px;">
+        <p style="margin:0 0 14px;font-size:14px;line-height:1.6;color:#cbd5e1;">
+          Yth. Peneliti (<strong style="color:#ffffff;">${recipientEmail}</strong>),
+        </p>
+        <p style="margin:0 0 20px;font-size:14px;line-height:1.65;color:#94a3b8;">
+          Kami menerima permintaan untuk masuk ke akun <strong style="color:#e2e8f0;">TGSDORK Studio</strong> Anda. Gunakan 6 digit kode otentikasi sekali pakai (OTP) di bawah ini untuk melanjutkan:
+        </p>
+        <div style="margin:0 0 20px;padding:18px 16px;background-color:#090b10;border:1px solid #263044;border-radius:14px;text-align:center;">
+          <div style="font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#7dd3fc;margin-bottom:8px;">Kode Verifikasi Anda</div>
+          <div style="font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:30px;font-weight:700;letter-spacing:8px;color:#ffffff;">${code}</div>
+          <div style="margin-top:8px;font-size:12px;color:#64748b;">Berlaku selama <strong style="color:#cbd5e1;">10 menit</strong> &bull; Satu kali pakai</div>
+        </div>
+        <p style="margin:0 0 18px;font-size:12.5px;line-height:1.6;color:#64748b;">
+          Demi menjaga keamanan naskah dan arsip riset Anda, jangan bagikan kode ini kepada siapa pun. Jika Anda tidak merasa melakukan permintaan masuk ini, Anda dapat mengabaikan email ini dengan aman.
+        </p>
+        <div style="padding-top:16px;border-top:1px solid #1e2330;font-size:12px;color:#64748b;">
+          Salam hangat,<br />
+          <strong style="color:#94a3b8;">Tim TGSDORK Academic Studio</strong>
+        </div>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+  return { subject, text, html };
+}
+
 // Send email via standard SMTP (TLS / STARTTLS)
 async function sendSmtpEmail(
   to: string,
   subject: string,
-  text: string
+  text: string,
+  html?: string
 ): Promise<{ success: boolean; error?: string }> {
   let host = process.env.EMAIL_SMTP_HOST;
   let port = parseInt(process.env.EMAIL_SMTP_PORT || '587', 10);
@@ -145,12 +213,13 @@ async function sendSmtpEmail(
           stage = 8;
         } else if (stage === 8 && code === 354) {
           const mime = [
-            `From: "TGSDORK Academic" <${user}>`,
+            `From: "TGSDORK Academic Studio" <${user}>`,
             `To: <${to}>`,
             `Subject: ${subject}`,
-            `Content-Type: text/plain; charset=utf-8`,
+            `MIME-Version: 1.0`,
+            `Content-Type: ${html ? 'text/html' : 'text/plain'}; charset=utf-8`,
             ``,
-            text,
+            html || text,
             `.`,
           ].join('\r\n');
           socket.write(mime + '\r\n');
@@ -175,7 +244,8 @@ async function sendResendEmail(
   fromEmail: string,
   to: string,
   subject: string,
-  text: string
+  text: string,
+  html: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const res = await fetch('https://api.resend.com/emails', {
@@ -189,6 +259,7 @@ async function sendResendEmail(
         to: [to],
         subject,
         text,
+        html,
       }),
     });
     const d = (await res.json()) as { id?: string; message?: string };
@@ -230,21 +301,22 @@ export async function requestOtp(email: string): Promise<{ success: boolean; pre
     }
   } catch {}
 
-  const emailBody = `Halo,\n\nKode verifikasi masuk ke akun TGSDORK Anda adalah:\n\n   ${code}\n\nKode ini berlaku selama 10 menit.\nJangan bagikan kode ini kepada siapapun.\n\n--\nTGSDORK Academic Studio`;
+  const mail = buildOtpEmailContent(cleanEmail, code);
 
   if (resendApiKey) {
     const resendRes = await sendResendEmail(
       resendApiKey,
       fromEmail,
       cleanEmail,
-      `Kode Masuk TGSDORK: ${code}`,
-      emailBody
+      mail.subject,
+      mail.text,
+      mail.html
     );
     if (resendRes.success) {
       logger.success(`Email OTP via Resend berhasil dikirim ke ${cleanEmail}`);
       return {
         success: true,
-        message: `Kode verifikasi 6 digit telah dikirim ke ${cleanEmail}. Periksa inbox / spam.`,
+        message: `Kode verifikasi 6 digit telah dikirim ke ${cleanEmail}. Silakan periksa kotak masuk atau folder spam Anda.`,
       };
     } else {
       logger.warn(`Resend gagal (${resendRes.error}), mencoba fallback SMTP...`);
@@ -254,8 +326,9 @@ export async function requestOtp(email: string): Promise<{ success: boolean; pre
   // Try sending real email if SMTP is configured
   const smtpRes = await sendSmtpEmail(
     cleanEmail,
-    `Kode Masuk TGSDORK: ${code}`,
-    emailBody
+    mail.subject,
+    mail.text,
+    mail.html
   );
 
   if (smtpRes.success) {

@@ -1,75 +1,103 @@
 # TGSDORK — Academic Research & Manuscript Studio
 
-Studio riset literatur ilmiah, penyusunan naskah akademik otomatis (Makalah, Skripsi, Literature Review, Slide Presentasi), audit mutu PUEBI 80+, dan parafrase Turnitin berbasis AI.
+**TGSDORK** adalah studio riset literatur dan penyusunan naskah akademik terpadu (**Web Studio & CLI**) yang menggabungkan penelusuran jurnal ilmiah otomatis (*Academic Google Dorking*), penguncian sitasi nyata (`<verified_sources>`), audit kelayakan naskah, parafrase kemiripan, hingga ekspor siap kumpul ke format Microsoft Word (`.docx`), PDF (`.pdf`), dan PowerPoint (`.pptx`).
 
-## Fitur Utama
+---
 
-- **Riset Jurnal & Verifikasi DOI Anti-Halusinasi:** Prioritas indeks jurnal Indonesia (Garuda Kemdikbud, SINTA, Neliti, repositori `.ac.id`, OpenAlex Indonesia) dengan verifikasi status DOI aktif langsung ke `doi.org`.
-- **Gaya Sitasi Fleksibel (APA 7th, IEEE, Harvard):** Dukungan penuh in-text citation numerik `[1]` untuk bidang teknik/sains, Author-Date `(Penulis, Tahun)` untuk sosial/kesehatan, serta Harvard format.
-- **Bagan Alir Penelitian Bab III (Mermaid.js):** Otomasi visualisasi diagram alur metodologi penelitian interaktif pada Web UI dan diformat rapi saat diekspor ke Word (.docx).
-- **Upload Jurnal PDF Wajib (Custom Reference):** Lampirkan file `.pdf`/`.docx`/`.txt` referensi wajib dari dosen untuk diekstrak dan disitasi langsung di dalam naskah.
-- **Tabel Matriks Penelitian Terdahulu Otomatis (Bab II):** Menyusun tabel komparasi peneliti, tahun, judul, metode, dan kesenjangan riset secara otomatis pada Bab II / Tinjauan Pustaka.
-- **Revisi Per-Bab & Auto-Audit >= 80/100:** Evaluasi otomatis draf naskah dengan revisi bertahap hingga melampaui skor kelayakan 80/100, ditambah fitur tulis ulang per-bab langsung dari Workspace.
-- **Turnitin Originality Scanner & Bypass Paraphraser:** Estimasi skor kemiripan (*Similarity Index*) & deteksi AI beserta rekonstruksi kalimat otomatis.
-- **PowerPoint Instan (.pptx):** Buat 10–14 slide presentasi profesional lengkap dengan catatan pemateri (*speaker notes*) dan transisi dari satu baris judul.
-- **Multi-Format & 1-Click ZIP Bundle Export:** Ekspor otomatis ke Word (`.docx`), PDF (`.pdf`), PowerPoint (`.pptx`), Slide HTML (`.html`), Markdown (`.md`), BibTeX (`.bib`), dan arsip paket lengkap (`.zip`).
+## Keunggulan Utama
 
-## Arsitektur Direktori
+| Modul | Deskripsi Kemampuan |
+| :--- | :--- |
+| **Academic Google Dorking** | Meracik kueri penelusuran terarah ke repositori perguruan tinggi (`.ac.id`, `.edu`), Garuda Kemdikbud, SINTA, DOAJ, Crossref, dan OpenAlex beserta validasi DOI aktif (`doi.org`). |
+| **Source-Locked Citations** | Mengekstrak teks penuh artikel ilmiah (PDF & HTML) dan mengunci metadata penulis serta tahun terbit di dalam blok `<verified_sources>` untuk mencegah referensi fiktif. |
+| **Penyusunan Naskah Terstruktur** | Menyusun **Makalah Ilmiah**, **Skripsi / Tesis (Bab I–V)**, **Literature Review Matrix**, dan **Kerangka Presentasi** lengkap dengan tabel penelitian terdahulu serta bagan alir metodologi. |
+| **Audit Mutu & Revisi Otomatis** | Mengevaluasi struktur bab, sinkronisasi sitasi 1:1, kedalaman analisis, dan tata bahasa baku PUEBI, dilengkapi fitur perbaikan otomatis maupun revisi per bab. |
+| **Uji Kemiripan & Parafrase** | Mengukur estimasi indeks kemiripan kalimat dan menulis ulang bagian yang terdeteksi secara akademis tanpa mengubah makna ilmiah maupun sitasi. |
+| **Generator PowerPoint (`.pptx`)** | Menghasilkan 10–14 salindia presentasi profesional lengkap dengan catatan pembicara (*speaker notes*) di setiap slide langsung dari judul atau naskah. |
+| **Multi-Format Export** | Unduh instan dalam format `.docx`, `.pdf`, `.pptx`, `.html` (Marp slide), `.md`, `.bib` (BibTeX), dan bundel arsip `.zip`. |
+
+---
+
+## Standar Format Dokumen (`.docx` & `.pdf`)
+
+Seluruh naskah yang diekspor mengikuti pedoman penulisan karya ilmiah perguruan tinggi:
+
+- **Ukuran Kertas:** A4 (`210 × 297 mm`)
+- **Margin Standar Skripsi:** Atas `4 cm`, Kiri `4 cm`, Bawah `3 cm`, Kanan `3 cm`
+- **Tipografi Pilihan:** `Times New Roman` (default), `Arial`, `Calibri`, `Georgia`, `Garamond`
+- **Spasi & Perataan:** Spasi `1,5` (*line spacing*), perataan teks rata kanan-kiri (*justified*), dan indentasi baris pertama paragraf otomatis
+- **Gaya Sitasi:** **APA 7th Edition**, **IEEE** (`[1], [2]`), dan **Harvard**
+
+---
+
+## Struktur Direktori
 
 ```text
-src/
-├── ai/          # Client LLM (SSE streaming, key rotation, output sanitizer) & prompt akademik
-├── core/        # Konfigurasi (~/.tgsdork/config.json), autentikasi OTP email, checkpoint
-├── dorker/      # Query builder, scraper DDG/Bing, OpenAlex Indonesia API, PDF/HTML extractor
-├── exporter/    # Builder DOCX, PDF (Playwright), PPTX (PptxGenJS), Marp HTML, BibTeX
-├── pipelines/   # Pipeline penyusunan bab, peer-reviewer 80+, dan Turnitin paraphraser
-└── server/      # Web Studio UI (Left-Sidebar Bento Glassmorphism + WebSocket live stream)
+tgsdork/
+├── public/                 # Asset statis Web Studio & Landing Page (CSS, JS)
+├── scripts/                # Utilitas pemanen metadata jurnal lokal
+├── src/
+│   ├── index.ts            # Entry point CLI (Commander & Clack Prompts)
+│   ├── chat.ts             # Mode diskusi interaktif via terminal
+│   ├── core/               # Manajemen sesi, autentikasi OTP email, checkpoint, logger
+│   ├── dorker/             # Builder kueri Dork, scraper jurnal, verifikator DOI & parser PDF
+│   ├── pipelines/          # Alur penyusunan makalah, skripsi, lit-review, audit & kemiripan
+│   ├── exporter/           # Generator dokumen DOCX, PDF, PPTX, BibTeX, Markdown & ZIP
+│   └── server/             # Server HTTP/WebSocket, Landing Page & Bento Web Studio
+└── workspace/              # Penyimpanan checkpoint dan berkas hasil ekspor
 ```
+
+---
 
 ## Instalasi & Penggunaan
 
+### 1. Persiapan Lingkungan
+
+Pastikan **Node.js v20+** sudah terpasang, lalu instal dependensi proyek:
+
 ```bash
-# 1. Install dependencies
 npm install
+```
 
-# 2. Build bundle produksi
+### 2. Menjalankan Web Studio
+
+Untuk menjalankan **Landing Page** (`/`) dan **Web Studio** (`/studio`) dalam mode pengembangan (*live-reload*):
+
+```bash
+npm run dev:ui
+```
+
+Untuk membangun bundel produksi dan menjalankan server pada port `3456`:
+
+```bash
 npm run build
-
-# 3. Jalankan Web Studio (default port 3456)
 node dist/index.js serve --port 3456
 ```
 
-### Penggunaan via CLI
+### 3. Penggunaan melalui Terminal (CLI)
 
 ```bash
-# Riset & susun makalah ilmiah
-npx tsx src/index.ts generate "Dampak Kecerdasan Artifisial pada Pendidikan Tinggi di Indonesia" --type makalah
+# Menyusun makalah ilmiah dari topik penelitian
+npx tsx src/index.ts generate "Implementasi Vision Transformer untuk Klasifikasi Citra Medis" --type makalah
 
-# Mode interaktif / chat konsultan akademik
+# Menyusun draf skripsi lengkap dengan gaya sitasi APA
+npx tsx src/index.ts generate "Adopsi Pembayaran Digital QRIS pada UMKM Kuliner" --type skripsi --citation apa
+
+# Mengaudit kelayakan berkas naskah (.docx / .pdf / .md)
+npx tsx src/index.ts review ~/Documents/makalah_riset.docx
+
+# Mode konsultasi topik & metodologi interaktif
 npx tsx src/index.ts chat
 ```
 
-## Konfigurasi (`~/.tgsdork/config.json`)
+---
 
-```json
-{
-  "provider": "openai-compatible",
-  "openai": {
-    "baseUrl": "https://your-gateway.example.com/v1",
-    "apiKeys": ["sk-..."],
-    "models": {
-      "fast": "your-fast-model",
-      "writer": "your-writer-model"
-    }
-  },
-  "search": {
-    "provider": "ddg"
-  }
-}
-```
-
-## Pengujian
+## Validasi & Pengujian
 
 ```bash
+# Pemeriksaan tipe TypeScript
+npm run typecheck
+
+# Menjalankan rangkaian pengujian
 npm test
 ```
