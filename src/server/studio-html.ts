@@ -695,7 +695,7 @@ export function renderStudioHtml(devUiMode = false): string {
       </div>
 
       <h2 id="authModalTitle">Masuk ke TGSDORK Studio</h2>
-      <p id="authModalSubtitle">Masukkan alamat email aktif Anda. Kami akan mengirimkan 6 digit kode verifikasi sekali pakai (OTP) dari <strong>noreply@tgsdork.com</strong>.</p>
+      <p id="authModalSubtitle">Masukkan alamat email aktif Anda. Kami akan mengirimkan 6 digit kode verifikasi sekali pakai (OTP) dari <strong><!--email_off-->noreply@tgsdork.com<!--/email_off--></strong>.</p>
 
       <div id="authStep1">
         <div class="form-group">
