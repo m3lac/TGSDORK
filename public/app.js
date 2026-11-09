@@ -272,12 +272,12 @@
   async function sendAuthCode() {
     const email = document.getElementById('authEmail').value.trim();
     if (!email || !email.includes('@')) {
-      notifyToast('Masukkan alamat email yang valid.', 'error');
+      notifyToast('Mohon masukkan alamat email yang valid (contoh: nama@kampus.ac.id).', 'error');
       return;
     }
     const btn = document.getElementById('btnSendCode');
     btn.disabled = true;
-    btn.textContent = 'Mengirim kode...';
+    btn.textContent = 'Mengirim kode verifikasi...';
     try {
       const res = await fetch('/api/auth/send-code', {
         method: 'POST',
@@ -288,13 +288,31 @@
       if (d.error) throw new Error(d.error);
       document.getElementById('authStep1').style.display = 'none';
       document.getElementById('authStep2').style.display = 'block';
-      document.getElementById('codeHint').textContent = d.previewCode ? d.message : 'Kode 6 digit dikirim ke ' + email;
+      const titleEl = document.getElementById('authModalTitle');
+      const subEl = document.getElementById('authModalSubtitle');
+      if (titleEl) titleEl.textContent = 'Periksa Kotak Masuk Email Anda';
+      if (subEl) {
+        subEl.innerHTML = 'Masukkan 6 digit kode verifikasi (OTP) yang baru saja kami kirimkan untuk membuka ruang kerja Anda.';
+      }
+      const hintEl = document.getElementById('codeHint');
+      if (hintEl) {
+        if (d.previewCode) {
+          hintEl.innerHTML =
+            '<div class="otp-hint-title">Kode Verifikasi Sistem Siap Digunakan</div>' +
+            '<div class="otp-hint-body">' + escapeHtml(d.message) + '</div>';
+        } else {
+          hintEl.innerHTML =
+            '<div class="otp-hint-title">Kode OTP terkirim ke <strong>' + escapeHtml(email) + '</strong></div>' +
+            '<div class="otp-hint-body">Dikirim melalui <code>noreply@tgsdork.com</code>. Silakan periksa <strong>Kotak Masuk (Inbox)</strong> atau folder <strong>Spam / Promosi</strong> Anda. Kode berlaku selama 10 menit.</div>';
+        }
+      }
+      notifyToast('Kode OTP 6 digit telah dikirim ke ' + email + '. Silakan cek Inbox atau folder Spam Anda.', 'success');
       document.getElementById('authCode').focus();
     } catch (err) {
-      notifyToast('Gagal mengirim kode: ' + err.message, 'error');
+      notifyToast('Gagal mengirim kode OTP: ' + err.message, 'error');
     } finally {
       btn.disabled = false;
-      btn.textContent = 'Kirim Kode Masuk';
+      btn.textContent = 'Kirim Kode Verifikasi (OTP)';
     }
   }
 
@@ -302,12 +320,12 @@
     const email = document.getElementById('authEmail').value.trim();
     const code = document.getElementById('authCode').value.trim();
     if (!code || code.length < 6) {
-      notifyToast('Masukkan 6 digit kode verifikasi.', 'error');
+      notifyToast('Mohon masukkan lengkap 6 digit angka kode verifikasi (OTP).', 'error');
       return;
     }
     const btn = document.getElementById('btnVerifyCode');
     btn.disabled = true;
-    btn.textContent = 'Memverifikasi...';
+    btn.textContent = 'Memverifikasi kode OTP...';
     try {
       const res = await fetch('/api/auth/verify', {
         method: 'POST',
@@ -320,12 +338,12 @@
       localStorage.setItem('tgsdork_email', d.email);
       checkAuth();
       loadWorkspaceTasks();
-      notifyToast('Berhasil masuk sebagai ' + d.email, 'success');
+      notifyToast('Verifikasi berhasil! Selamat datang di TGSDORK Studio (' + d.email + ').', 'success');
     } catch (err) {
-      notifyToast('Verifikasi gagal: ' + err.message, 'error');
+      notifyToast(err.message || 'Kode verifikasi tidak valid.', 'error');
     } finally {
       btn.disabled = false;
-      btn.textContent = 'Verifikasi & Masuk';
+      btn.textContent = 'Verifikasi & Masuk Studio';
     }
   }
 
@@ -333,6 +351,12 @@
     document.getElementById('authStep1').style.display = 'block';
     document.getElementById('authStep2').style.display = 'none';
     document.getElementById('authCode').value = '';
+    const titleEl = document.getElementById('authModalTitle');
+    const subEl = document.getElementById('authModalSubtitle');
+    if (titleEl) titleEl.textContent = 'Masuk ke TGSDORK Studio';
+    if (subEl) {
+      subEl.innerHTML = 'Masukkan alamat email aktif Anda. Kami akan mengirimkan 6 digit kode verifikasi sekali pakai (OTP) dari <strong>noreply@tgsdork.com</strong>.';
+    }
   }
 
   async function logout() {

@@ -48,19 +48,33 @@ function buildOtpEmailContent(recipientEmail: string, code: string): {
 } {
   const subject = `${code} — Kode Verifikasi Masuk TGSDORK Studio`;
   const text = [
-    `Yth. Peneliti (${recipientEmail}),`,
+    `TGSDORK ACADEMIC STUDIO (https://tgsdork.com)`,
+    `================================================`,
     ``,
-    `Kami menerima permintaan akses masuk ke ruang kerja TGSDORK Academic Studio menggunakan alamat email ini.`,
-    `Silakan masukkan 6 digit kode verifikasi berikut pada halaman login:`,
+    `Halo ${recipientEmail},`,
+    ``,
+    `Kami menerima permintaan untuk masuk ke ruang kerja TGSDORK Academic Studio menggunakan alamat email Anda.`,
+    ``,
+    `KODE VERIFIKASI 6 DIGIT ANDA:`,
     ``,
     `    ${code}`,
     ``,
-    `Kode ini berlaku selama 10 menit dan hanya dapat digunakan untuk satu kali sesi masuk.`,
+    `Cara Menggunakan Kode Ini:`,
+    `1. Kembali ke halaman login TGSDORK Studio (https://tgsdork.com/studio) di browser Anda.`,
+    `2. Ketik atau tempel 6 digit kode verifikasi di atas pada kolom yang tersedia.`,
+    `3. Klik tombol "Verifikasi & Masuk Studio".`,
     ``,
-    `Demi keamanan dokumen dan arsip riset Anda, mohon tidak membagikan kode ini kepada siapa pun. Apabila Anda tidak merasa melakukan permintaan masuk ini, abaikan pesan email ini.`,
+    `Informasi Penting:`,
+    `- Masa berlaku : 10 menit sejak email ini dikirimkan.`,
+    `- Penggunaan   : Hanya berlaku untuk 1 kali sesi masuk.`,
+    `- Pengirim     : noreply@tgsdork.com`,
+    ``,
+    `Catatan Keamanan:`,
+    `Demi menjaga kerahasiaan naskah dan arsip riset Anda, jangan pernah membagikan kode ini kepada siapa pun. Jika Anda tidak merasa meminta kode ini, abaikan email ini—akun Anda tetap aman.`,
     ``,
     `Salam hangat,`,
     `Tim TGSDORK Academic Studio`,
+    `https://tgsdork.com`,
   ].join('\n');
 
   const html = `<!DOCTYPE html>
@@ -70,33 +84,67 @@ function buildOtpEmailContent(recipientEmail: string, code: string): {
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${subject}</title>
 </head>
-<body style="margin:0;padding:28px 16px;background-color:#090a0f;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#f8fafc;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:520px;margin:0 auto;background-color:#12151e;border:1px solid #232838;border-radius:18px;overflow:hidden;">
+<body style="margin:0;padding:32px 16px;background-color:#07090e;font-family:-apple-system,BlinkMacSystemFont,'Plus Jakarta Sans','Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#f8fafc;">
+  <!-- Preheader Text -->
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;mso-hide:all;">
+    Kode verifikasi OTP Anda adalah ${code}. Masukkan 6 digit kode ini di halaman login TGSDORK Studio (berlaku 10 menit).
+  </div>
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:540px;margin:0 auto;background-color:#10141f;border:1px solid #22293a;border-radius:20px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,0.45);">
     <tr>
-      <td style="padding:24px 28px 18px;border-bottom:1px solid #1e2330;background-color:#0d1017;">
-        <div style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#38bdf8;margin-bottom:4px;">TGSDORK Academic Studio</div>
-        <div style="font-size:19px;font-weight:700;color:#ffffff;letter-spacing:-0.01em;">Verifikasi Akses Ruang Kerja</div>
+      <td style="padding:26px 30px 20px;border-bottom:1px solid #1d2434;background:linear-gradient(180deg,#131929 0%,#0d111b 100%);">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+          <tr>
+            <td>
+              <div style="display:inline-block;padding:4px 10px;border-radius:999px;background-color:rgba(56,189,248,0.12);border:1px solid rgba(56,189,248,0.28);font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#38bdf8;margin-bottom:10px;">
+                TGSDORK Academic Studio &bull; tgsdork.com
+              </div>
+              <div style="font-size:21px;font-weight:700;color:#ffffff;letter-spacing:-0.015em;line-height:1.3;">
+                Kode Verifikasi Masuk Studio
+              </div>
+            </td>
+          </tr>
+        </table>
       </td>
     </tr>
     <tr>
-      <td style="padding:26px 28px;">
-        <p style="margin:0 0 14px;font-size:14px;line-height:1.6;color:#cbd5e1;">
-          Yth. Peneliti (<strong style="color:#ffffff;">${recipientEmail}</strong>),
+      <td style="padding:28px 30px;">
+        <p style="margin:0 0 12px;font-size:14.5px;line-height:1.6;color:#e2e8f0;">
+          Halo <strong style="color:#ffffff;">${recipientEmail}</strong>,
         </p>
-        <p style="margin:0 0 20px;font-size:14px;line-height:1.65;color:#94a3b8;">
-          Kami menerima permintaan untuk masuk ke akun <strong style="color:#e2e8f0;">TGSDORK Studio</strong> Anda. Gunakan 6 digit kode otentikasi sekali pakai (OTP) di bawah ini untuk melanjutkan:
+        <p style="margin:0 0 22px;font-size:14px;line-height:1.65;color:#94a3b8;">
+          Kami menerima permintaan akses masuk ke ruang kerja <strong style="color:#f1f5f9;">TGSDORK Academic Studio</strong> menggunakan alamat email ini. Masukkan <strong style="color:#f1f5f9;">6 digit kode verifikasi (OTP)</strong> berikut pada layar browser Anda:
         </p>
-        <div style="margin:0 0 20px;padding:18px 16px;background-color:#090b10;border:1px solid #263044;border-radius:14px;text-align:center;">
-          <div style="font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#7dd3fc;margin-bottom:8px;">Kode Verifikasi Anda</div>
-          <div style="font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:30px;font-weight:700;letter-spacing:8px;color:#ffffff;">${code}</div>
-          <div style="margin-top:8px;font-size:12px;color:#64748b;">Berlaku selama <strong style="color:#cbd5e1;">10 menit</strong> &bull; Satu kali pakai</div>
+
+        <div style="margin:0 0 22px;padding:22px 18px;background-color:#080b12;border:1px solid #29354d;border-radius:16px;text-align:center;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#38bdf8;margin-bottom:10px;">
+            Kode Verifikasi Sekali Pakai (OTP)
+          </div>
+          <div style="font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:34px;font-weight:800;letter-spacing:10px;color:#ffffff;padding-left:10px;">
+            ${code}
+          </div>
+          <div style="margin-top:12px;font-size:12px;color:#94a3b8;">
+            Berlaku selama <strong style="color:#f8fafc;">10 menit</strong> &bull; Hanya untuk <strong style="color:#f8fafc;">1 kali sesi masuk</strong>
+          </div>
         </div>
-        <p style="margin:0 0 18px;font-size:12.5px;line-height:1.6;color:#64748b;">
-          Demi menjaga keamanan naskah dan arsip riset Anda, jangan bagikan kode ini kepada siapa pun. Jika Anda tidak merasa melakukan permintaan masuk ini, Anda dapat mengabaikan email ini dengan aman.
+
+        <div style="margin:0 0 22px;padding:16px 18px;background-color:#0c101a;border:1px solid #1c2333;border-radius:12px;">
+          <div style="font-size:12px;font-weight:700;color:#cbd5e1;margin-bottom:8px;">
+            Langkah Selanjutnya:
+          </div>
+          <ol style="margin:0;padding-left:18px;font-size:13px;line-height:1.7;color:#94a3b8;">
+            <li>Kembali ke halaman login <a href="https://tgsdork.com/studio" style="color:#38bdf8;text-decoration:none;font-weight:600;">tgsdork.com/studio</a> di browser Anda.</li>
+            <li>Ketik atau tempel 6 digit kode di atas pada kolom <strong>Kode Verifikasi</strong>.</li>
+            <li>Klik tombol <strong>Verifikasi &amp; Masuk Studio</strong> untuk membuka ruang kerja Anda.</li>
+          </ol>
+        </div>
+
+        <p style="margin:0 0 20px;font-size:12.5px;line-height:1.65;color:#64748b;">
+          <strong style="color:#94a3b8;">Catatan Keamanan:</strong> Demi melindungi dokumen dan arsip riset Anda, jangan pernah memberikan kode ini kepada pihak lain. Apabila Anda tidak merasa melakukan permintaan masuk ini, abaikan email ini dengan aman.
         </p>
-        <div style="padding-top:16px;border-top:1px solid #1e2330;font-size:12px;color:#64748b;">
-          Salam hangat,<br />
-          <strong style="color:#94a3b8;">Tim TGSDORK Academic Studio</strong>
+
+        <div style="padding-top:18px;border-top:1px solid #1d2434;font-size:12px;line-height:1.6;color:#64748b;">
+          Dikirim otomatis oleh <strong style="color:#94a3b8;">TGSDORK Academic Studio</strong> (<a href="https://tgsdork.com" style="color:#38bdf8;text-decoration:none;">tgsdork.com</a>)<br />
+          Email pengirim resmi: <span style="color:#94a3b8;">noreply@tgsdork.com</span>
         </div>
       </td>
     </tr>
@@ -291,16 +339,21 @@ export async function requestOtp(email: string): Promise<{ success: boolean; pre
 
   // Check Resend API Key from env or config
   let resendApiKey = process.env.RESEND_API_KEY;
-  let fromEmail = process.env.RESEND_FROM_EMAIL || 'TGSDORK <noreply@tgsdork.com>';
+  let fromEmail = process.env.RESEND_FROM_EMAIL || 'TGSDORK Academic Studio <noreply@tgsdork.com>';
   try {
     const cfgPath = path.join(os.homedir(), '.tgsdork', 'config.json');
     if (fs.existsSync(cfgPath)) {
       const cfg = JSON.parse(fs.readFileSync(cfgPath, 'utf-8'));
       if (!resendApiKey) resendApiKey = cfg.resendApiKey || cfg.resend_api_key;
-      if (cfg.fromEmail) fromEmail = cfg.fromEmail;
+      if (
+        cfg.fromEmail &&
+        !String(cfg.fromEmail).includes('melac.my.id') &&
+        !String(cfg.fromEmail).includes('tgsdork.local')
+      ) {
+        fromEmail = cfg.fromEmail;
+      }
     }
   } catch {}
-
   const mail = buildOtpEmailContent(cleanEmail, code);
 
   if (resendApiKey) {
@@ -316,7 +369,7 @@ export async function requestOtp(email: string): Promise<{ success: boolean; pre
       logger.success(`Email OTP via Resend berhasil dikirim ke ${cleanEmail}`);
       return {
         success: true,
-        message: `Kode verifikasi 6 digit telah dikirim ke ${cleanEmail}. Silakan periksa kotak masuk atau folder spam Anda.`,
+        message: `Kode OTP 6 digit telah dikirim ke ${cleanEmail} melalui noreply@tgsdork.com. Silakan cek Kotak Masuk (Inbox) atau folder Spam/Promosi Anda (berlaku 10 menit).`,
       };
     } else {
       logger.warn(`Resend gagal (${resendRes.error}), mencoba fallback SMTP...`);
@@ -335,7 +388,7 @@ export async function requestOtp(email: string): Promise<{ success: boolean; pre
     logger.success(`Email OTP berhasil dikirim ke ${cleanEmail}`);
     return {
       success: true,
-      message: `Kode verifikasi telah dikirim ke ${cleanEmail}. Periksa kotak masuk atau spam.`,
+      message: `Kode OTP 6 digit telah dikirim ke ${cleanEmail}. Silakan cek Kotak Masuk (Inbox) atau folder Spam Anda (berlaku 10 menit).`,
     };
   } else {
     logger.warn(`SMTP belum aktif/gagal (${smtpRes.error}). Menggunakan kode OTP sistem.`);
@@ -355,17 +408,26 @@ export function verifyOtp(email: string, code: string): { success: boolean; toke
   const entry = otps[cleanEmail];
 
   if (!entry) {
-    return { success: false, error: 'Kode verifikasi belum diminta atau sudah kedaluwarsa.' };
+    return {
+      success: false,
+      error: 'Kode verifikasi belum diminta atau sudah kedaluwarsa. Silakan klik "Kirim Ulang Kode".',
+    };
   }
 
   if (Date.now() > entry.expires) {
     delete otps[cleanEmail];
     saveJson(OTP_FILE, otps);
-    return { success: false, error: 'Kode verifikasi telah kedaluwarsa (lebih dari 10 menit).' };
+    return {
+      success: false,
+      error: 'Masa berlaku kode OTP (10 menit) telah habis. Silakan kirim ulang kode verifikasi baru.',
+    };
   }
 
   if (entry.code !== cleanCode) {
-    return { success: false, error: 'Kode verifikasi salah. Silakan periksa kembali.' };
+    return {
+      success: false,
+      error: 'Kode OTP tidak sesuai. Pastikan 6 digit angka yang dimasukkan sama dengan email terbaru dari noreply@tgsdork.com.',
+    };
   }
 
   // Success: generate session token

@@ -691,27 +691,31 @@ export function renderStudioHtml(devUiMode = false): string {
           <span class="brand-orb sm"><img src="data:image/png;base64,${FAVICON_B64}" alt="Logo TGSDORK" /></span>
           <span class="brand-name">TGSDORK</span>
         </a>
+        <span class="auth-badge">Akses Terverifikasi</span>
       </div>
 
-      <h2 id="authModalTitle">Masuk Studio</h2>
-      <p>Masukkan email untuk menerima 6 digit kode akses.</p>
+      <h2 id="authModalTitle">Masuk ke TGSDORK Studio</h2>
+      <p id="authModalSubtitle">Masukkan alamat email aktif Anda. Kami akan mengirimkan 6 digit kode verifikasi sekali pakai (OTP) dari <strong>noreply@tgsdork.com</strong>.</p>
 
       <div id="authStep1">
         <div class="form-group">
-          <label for="authEmail">Email</label>
-          <input type="email" id="authEmail" placeholder="nama@kampus.ac.id" autocomplete="email" required />
+          <label for="authEmail">Alamat Email</label>
+          <input type="email" id="authEmail" placeholder="nama@kampus.ac.id atau email pribadi" autocomplete="email" onkeydown="if(event.key==='Enter'){event.preventDefault();TGSDORK.sendAuthCode();}" required />
         </div>
-        <button type="button" id="btnSendCode" class="btn-primary" onclick="TGSDORK.sendAuthCode()">Kirim Kode</button>
+        <button type="button" id="btnSendCode" class="btn-primary" style="width: 100%;" onclick="TGSDORK.sendAuthCode()">Kirim Kode Verifikasi (OTP)</button>
       </div>
 
       <div id="authStep2" style="display: none;">
-        <div class="form-group">
-          <label for="authCode">Kode Verifikasi</label>
-          <input type="text" id="authCode" placeholder="000000" maxlength="6" inputmode="numeric" pattern="[0-9]*" class="otp-code-input" />
-        </div>
         <div id="codeHint" class="otp-code-hint"></div>
-        <button type="button" id="btnVerifyCode" class="btn-primary" onclick="TGSDORK.verifyAuthCode()">Masuk</button>
-        <button type="button" class="btn-secondary" style="width: 100%; margin-top: 8px;" onclick="TGSDORK.resetAuthStep()">Ganti Email</button>
+        <div class="form-group">
+          <label for="authCode">6 Digit Kode Verifikasi (OTP)</label>
+          <input type="text" id="authCode" placeholder="000000" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" class="otp-code-input" onkeydown="if(event.key==='Enter'){event.preventDefault();TGSDORK.verifyAuthCode();}" />
+        </div>
+        <button type="button" id="btnVerifyCode" class="btn-primary" style="width: 100%;" onclick="TGSDORK.verifyAuthCode()">Verifikasi &amp; Masuk Studio</button>
+        <div class="auth-step2-actions">
+          <button type="button" class="btn-secondary" onclick="TGSDORK.sendAuthCode()">Kirim Ulang Kode</button>
+          <button type="button" class="btn-secondary" onclick="TGSDORK.resetAuthStep()">Ganti Alamat Email</button>
+        </div>
       </div>
     </div>
   </div>
