@@ -1,4 +1,5 @@
 import type { SourceItem, CitationStyle } from '../types/index.js';
+import { applyHumanizerId, HUMANIZER_ID_EDITORIAL_RULES } from '../core/humanizer-id.js';
 
 const CITATION_OVERRIDE: Record<CitationStyle, string> = {
   apa: '',
@@ -74,6 +75,7 @@ export function sanitizeManuscriptText(raw: string): string {
   for (const [pattern, target] of BAKU_REPLACEMENTS) {
     out = out.replace(pattern, (m) => matchCase(m, target));
   }
+  out = applyHumanizerId(out);
 
   return out.replace(/\n{3,}/g, '\n\n').trim();
 }
@@ -188,6 +190,7 @@ STANDAR MUTU PENULISAN KARYA ILMIAH INDONESIA (TARGET AUDIT >= 85/100):
    - Cetak miring (*italic*) SELURUH istilah bahasa Inggris/asing secara konsisten (contoh: *project-based learning*, *scaffolding*, *systematic literature review*, *pre-test*, *dataset*).
 4. FORMAT BERSIH TANPA ARTEFAK MESIN:
    - DILARANG menyisipkan komentar HTML/kode, blok kode pemrograman (selain diagram \`\`\`mermaid pada bagian metodologi/kerangka), atau kalimat pengantar percakapan.
+${HUMANIZER_ID_EDITORIAL_RULES}
 `;
 
 export function getOutlinePrompt(

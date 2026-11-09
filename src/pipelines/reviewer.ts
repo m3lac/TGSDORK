@@ -18,6 +18,12 @@ import {
   sanitizeManuscriptText,
   syncBodyAndSources,
 } from '../ai/prompts.js';
+import {
+  auditWithHumanizerId,
+  formatHumanizerFindingsForPrompt,
+  formatHumanizerAuditSection,
+  HUMANIZER_ID_EDITORIAL_RULES,
+} from '../core/humanizer-id.js';
 import { searchDork } from '../dorker/searcher.js';
 import { extractSourcesSequential, isAcademicSource } from '../dorker/extractor.js';
 import { verifySourceItems } from '../dorker/verifier.js';
@@ -114,14 +120,21 @@ export async function reviewDocumentText(
   focus = 'keseluruhan'
 ): Promise<string> {
   const currentYear = new Date().getFullYear();
-  const systemPrompt = `Kamu adalah reviewer jurnal akademik senior Indonesia (assessor SINTA/Dikti) dan dosen pembimbing berpengalaman.
+  const humanizerFindings = auditWithHumanizerId(content, 25);
+  const humanizerPromptSummary = formatHumanizerFindingsForPrompt(humanizerFindings);
+  const humanizerReportSection = formatHumanizerAuditSection(humanizerFindings);
+
+  const systemPrompt = `Kamu adalah reviewer jurnal akademik senior Indonesia (assessor SINTA/Dikti) dan dosen pembimbing berpengalaman yang menggunakan kaidah penyuntingan akademik "humanizer-id" (EYD V, TBBBI Edisi IV, dan Buku Kemendikbudristek).
 Konteks Waktu Resmi: Tahun akademik saat ini adalah ${currentYear}. Artikel jurnal dengan tahun terbit hingga ${currentYear} adalah publikasi sahih yang sudah terbit (BUKAN tahun masa depan atau anakronisme).
 
 Tugasmu: Lakukan Academic Quality & Feasibility Review secara objektif dan terukur terhadap naskah ilmiah berikut.
 
+Hasil Pemindaian Leksikal & Sintaksis Otomatis (apissaj/humanizer-id):
+${humanizerPromptSummary}
+
 Kalibrasi Penilaian (0 - 100):
-- 85 - 95 (Siap Kumpul): Komponen lengkap (Abstrak ID/EN + Kata Kunci, Pendahuluan, Tinjauan Pustaka/Matriks, Metode Penelitian/Studi Kepustakaan, Pembahasan analitis, Penutup, Daftar Pustaka), sitasi in-text sinkron dengan Daftar Pustaka dari jurnal ilmiah kredibel, bahasa Indonesia baku (PUEBI) rapi. Catatan: Untuk naskah berjenis Studi Kepustakaan Sistematis (*Literature Review*), tidak wajib ada sampel responden lapangan selama metode penelusuran & sintesis literatur dijelaskan eksplisit dan klaim mengacu pada temuan studi sekunder secara jujur.
-- 75 - 84 (Perlu Revisi Minor): Struktur utama dan metodologi sudah ada, rujukan kredibel dan sinkron, namun masih ada kekurangan minor kedalaman elaborasi atau ketertiban cetak miring/redaksional.
+- 85 - 95 (Siap Kumpul): Komponen lengkap (Abstrak ID/EN + Kata Kunci, Pendahuluan, Tinjauan Pustaka/Matriks, Metode Penelitian/Studi Kepustakaan, Pembahasan analitis, Penutup, Daftar Pustaka), sitasi in-text sinkron dengan Daftar Pustaka dari jurnal ilmiah kredibel, bahasa Indonesia baku (EYD V/TBBBI/Humanizer-ID) rapi tanpa kalke/verba ringan berlebihan. Catatan: Untuk naskah berjenis Studi Kepustakaan Sistematis (*Literature Review*), tidak wajib ada sampel responden lapangan selama metode penelusuran & sintesis literatur dijelaskan eksplisit dan klaim mengacu pada temuan studi sekunder secara jujur.
+- 75 - 84 (Perlu Revisi Minor): Struktur utama dan metodologi sudah ada, rujukan kredibel dan sinkron, namun masih ada kekurangan minor kedalaman elaborasi, kalke terjemahan, verba ringan, atau ketertiban cetak miring/redaksional.
 - 55 - 74 (Perlu Revisi Mayor): Komponen wajib absen (misal tanpa Abstrak atau tanpa Metode), terdapat sitasi yatim yang tidak sinkron dengan Daftar Pustaka, atau pembahasan dangkal.
 - < 55 (Tidak Layak): Rujukan tidak ilmiah/situs komersial/portal asing non-akademik (Douyin, Zhihu, blog), struktur rusak, atau banyak artefak kode.
 
@@ -142,8 +155,8 @@ Format hasil review WAJIB persis sebagai berikut:
 ### 3. Evaluasi Sitasi & Sinkronisasi Daftar Pustaka
 - Ketercakupan 1:1 antara sitasi dalam teks dan Daftar Pustaka, serta kredibilitas jurnal rujukan (SINTA/DOAJ/Crossref/.ac.id).
 
-### 4. PUEBI, EYD, Typo & Tata Bahasa
-- Kepatuhan kata baku PUEBI, cetak miring istilah asing, dan keefektifan kalimat ilmiah.
+### 4. PUEBI, EYD V, Kalke & Keefektifan Kalimat (Humanizer-ID)
+- Evaluasi kepatuhan kata baku KBBI/EYD V, pemangkasan verba ringan, eliminasi kalke terjemahan mesin, ketepatan konjungsi intrakalimat/antarkalimat, dan cetak miring istilah asing.
 
 ### 5. Rekomendasi Revisi Konkret (Action Items)
 - Poin perbaikan spesifik dan terukur sesuai temuan di atas.
@@ -151,11 +164,13 @@ Format hasil review WAJIB persis sebagai berikut:
 Fokus telaah: ${focus}.
 Gunakan bahasa Indonesia baku yang lugas dan objektif.`;
 
-  return await generateText({
+  const aiReport = await generateText({
     prompt: `Naskah Dokumen Yang Direview:\n\n${content.slice(0, 150000)}`,
     systemPrompt,
     role: 'writer',
   });
+
+  return `${aiReport.trim()}\n\n---\n\n${humanizerReportSection}`;
 }
 
 export async function reviewTask(taskId: string, focus?: string): Promise<string> {
@@ -385,6 +400,8 @@ function buildSectionRevisionPrompt(
   sourcesXml: string,
   allowedCitations: string
 ): string {
+  const secHumanizerFindings = auditWithHumanizerId(sec.content || '', 15);
+  const secHumanizerNote = formatHumanizerFindingsForPrompt(secHumanizerFindings);
   const isAbstract = /\b(?:abstrak|abstract)\b/i.test(sec.title);
   if (isAbstract) {
     return `Judul Naskah: "${docTopic}"
@@ -447,11 +464,13 @@ Konten saat ini:
 ${sec.content || '(Bagian masih kosong — susun baru secara mendalam sesuai judul bagian)'}
 ---
 
-TUGAS REVISI MENDALAM (500-800 KATA):
+TUGAS REVISI MENDALAM & PENYUNTINGAN HUMANIZER-ID (500-800 KATA):
 1. Tuntaskan seluruh kritik reviewer yang relevan untuk bagian "${sec.title}" dengan paragraf ilmiah analitis yang bernas (bukan sekadar poin pendek).
 2. ATURAN SITASI MUTLAK 1:1: Gunakan HANYA sitasi persis dari daftar [${allowedCitations}]. HAPUS TOTAL sitasi situs komersial/portal asing (Douyin, Zhihu, dsb.) MAUPUN sitasi tokoh/penulis tahun (Nama, Tahun) yang TIDAK ada di <verified_sources> agar sinkron 100% dengan Daftar Pustaka.
 3. Pastikan klaim efektivitas/data kuantitatif merujuk secara jujur pada temuan artikel di <verified_sources> (tidak mengarang eksperimen lapangan fiktif tanpa sumber).
-4. Patuhi kata baku PUEBI ("analisis", "sistem", "standardisasi", "risiko", "praktik", "efektivitas", "autentik", "konkret", "diseminasi") dan cetak miring (*italic*) untuk seluruh istilah bahasa Inggris.${matrixNote}
+4. BERSIHKAN SELURUH TEMUAN HUMANIZER-ID BERIKUT PADA BAGIAN INI:
+${secHumanizerNote}
+${HUMANIZER_ID_EDITORIAL_RULES}${matrixNote}
 5. Mulai langsung dari sub-bab (\`###\`) atau paragraf pertama tanpa mengulang judul bab "${sec.title}".`;
 }
 
@@ -683,7 +702,8 @@ Instruksi revisi:
 Pedoman Wajib:
 1. HANYA gunakan sitasi persis dari daftar [${allowedCitations}] pada <verified_sources>. DILARANG menulis sitasi tahun (Nama, Tahun) untuk tokoh/penulis di luar daftar tersebut.
 2. HAPUS TOTAL sitasi situs komersial, media sosial, atau portal asing non-akademik (Douyin, Zhihu, Baidu, Weixin, dsb.) jika ada di draf lama.
-3. Patuhi kata baku PUEBI dan cetak miring (*italic*) seluruh istilah asing tanpa menyisipkan blok/komentar kode.`;
+3. Patuhi penuh kaidah penyuntingan akademik Humanizer-ID (EYD V, TBBBI Edisi IV, pemangkasan verba ringan, eliminasi kalke terjemahan mesin, dan cetak miring istilah asing):
+${HUMANIZER_ID_EDITORIAL_RULES}`;
 
   if (targetSectionTitle) {
     const sec = state.sections.find((s) =>
