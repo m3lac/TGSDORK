@@ -291,7 +291,7 @@ export async function requestOtp(email: string): Promise<{ success: boolean; pre
 
   // Check Resend API Key from env or config
   let resendApiKey = process.env.RESEND_API_KEY;
-  let fromEmail = process.env.RESEND_FROM_EMAIL || 'TGSDORK <noreply@tgsdork.local>';
+  let fromEmail = process.env.RESEND_FROM_EMAIL || 'TGSDORK <noreply@tgsdork.com>';
   try {
     const cfgPath = path.join(os.homedir(), '.tgsdork', 'config.json');
     if (fs.existsSync(cfgPath)) {

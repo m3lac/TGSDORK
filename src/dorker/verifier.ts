@@ -54,7 +54,7 @@ export async function verifyDoi(doiOrUrl: string): Promise<DoiVerificationResult
     const res = await fetch(targetUrl, {
       method: 'HEAD',
       headers: {
-        'User-Agent': 'TGSDORK-Academic-Verifier/1.0 (mailto:scholar@tgsdork.local)',
+        'User-Agent': 'TGSDORK-Academic-Verifier/1.0 (mailto:scholar@tgsdork.com)',
         Accept: 'text/html,application/xhtml+xml,application/pdf',
       },
       signal: AbortSignal.timeout(3500),
