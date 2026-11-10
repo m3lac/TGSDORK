@@ -5,6 +5,7 @@ import os from 'node:os';
 import { generateText } from '../ai/client.js';
 import { sanitizeManuscriptText } from '../ai/prompts.js';
 import { exportRawDocx } from '../exporter/docx-builder.js';
+import { HUMANIZER_ID_EDITORIAL_RULES } from '../core/humanizer-id.js';
 import { exportMarkdownToPdf } from '../exporter/pdf-builder.js';
 import { logger } from '../core/logger.js';
 
@@ -279,7 +280,9 @@ PERINTAH REKONSTRUKSI & PARAFRASE AKADEMIK (WAJIB LOLOS TURNITIN):
    - Lanjutkan dengan kalimat majemuk bertingkat yang kaya data (25-35 kata).
    - Hindari pola kalimat yang panjangnya seragam agar ritme tulisan terdengar seperti tulisan manusia asli.
 4. Ubah struktur kalimat aktif menjadi pasif atau sebaliknya secara bervariasi.
-5. Tuliskan naskah lengkap dari awal hingga akhir dalam format Markdown rapi tanpa kata pengantar atau catatan kaki.`;
+5. Tuliskan naskah lengkap dari awal hingga akhir dalam format Markdown rapi tanpa kata pengantar atau catatan kaki.
+${HUMANIZER_ID_EDITORIAL_RULES}
+`;
 
   const rawParaphrased = await generateText({
     prompt,
