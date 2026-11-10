@@ -1486,6 +1486,22 @@
                 textEl.textContent += (textEl.textContent ? '\n\n' : '') + '## ' + ev.sectionTitle + '\n\n';
                 textEl.scrollTop = textEl.scrollHeight;
               }
+              if (log) {
+                log.style.display = 'block';
+                log.textContent += '[' + new Date().toLocaleTimeString('id-ID') + '] Mulai menulis: ' + ev.sectionTitle + '\n';
+                log.scrollTop = log.scrollHeight;
+              }
+            } else if (ev.type === 'thinking') {
+              if (titleEl) {
+                titleEl.textContent = '[' + ev.index + '/' + ev.total + '] ' + ev.sectionTitle + ' (Menganalisis rujukan...)';
+              }
+            } else if (ev.type === 'chunk') {
+              if (textEl) {
+                textEl.textContent += ev.text;
+                textEl.scrollTop = textEl.scrollHeight;
+                const lines = textEl.textContent.split('\n').length;
+                if (counter) counter.textContent = lines + ' baris';
+              }
             } else if (ev.type === 'line') {
               streamLines++;
               if (textEl) {
@@ -1498,6 +1514,11 @@
               if (textEl) textEl.textContent += '\n';
             } else if (ev.type === 'section_end') {
               if (titleEl) titleEl.textContent = '[' + ev.index + '/' + ev.total + '] ' + ev.sectionTitle + ' tersimpan';
+              if (log) {
+                log.style.display = 'block';
+                log.textContent += '[' + new Date().toLocaleTimeString('id-ID') + '] Selesai: ' + ev.sectionTitle + '\n';
+                log.scrollTop = log.scrollHeight;
+              }
             }
           } else if (data.type === 'completed') {
             setPipelineStepState('completed');

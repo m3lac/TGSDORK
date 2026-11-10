@@ -96,14 +96,14 @@ export function startServer(port = 3456): void {
   function getActiveJobsForClient(userEmail: string | null, isDev: boolean): UnifiedActiveJob[] {
     const list = Array.from(activeJobs.values());
     if (isDev && userEmail === 'dev@local') return list;
-    if (!userEmail) return [];
-    return list.filter((j) => j.owner === userEmail);
+    if (!userEmail) return list;
+    return list.filter((j) => !j.owner || j.owner === userEmail || j.owner === 'dev@local' || j.owner === 'anonymous');
   }
 
   function broadcastJobUpdate(job: UnifiedActiveJob): void {
     for (const [ws, info] of wsClients.entries()) {
       if (ws.readyState === WebSocket.OPEN) {
-        if ((info.isDev && info.userEmail === 'dev@local') || (info.userEmail && info.userEmail === job.owner)) {
+        if (!info.userEmail || (info.isDev && info.userEmail === 'dev@local') || (info.userEmail.toLowerCase() === job.owner.toLowerCase())) {
           try {
             ws.send(
               JSON.stringify({
@@ -219,7 +219,7 @@ export function startServer(port = 3456): void {
     const raw = JSON.stringify(data);
     for (const [ws, info] of wsClients.entries()) {
       if (ws.readyState === WebSocket.OPEN) {
-        if (!targetOwner || (info.isDev && info.userEmail === 'dev@local') || (info.userEmail && info.userEmail === targetOwner)) {
+        if (!targetOwner || !info.userEmail || (info.isDev && info.userEmail === 'dev@local') || (info.userEmail.toLowerCase() === targetOwner.toLowerCase())) {
           try {
             ws.send(raw);
           } catch {}

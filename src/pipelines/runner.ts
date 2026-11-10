@@ -17,7 +17,7 @@ import { logger } from '../core/logger.js';
 import type { TaskState, SourceItem } from '../types/index.js';
 
 export interface DraftStreamEvent {
-  type: 'section_start' | 'line' | 'paragraph' | 'section_end';
+  type: 'section_start' | 'line' | 'paragraph' | 'section_end' | 'chunk' | 'thinking';
   sectionTitle: string;
   text: string;
   index: number;
@@ -227,10 +227,41 @@ export async function runTaskPipeline(
     );
 
     let content = '';
+    let streamedLive = false;
+    let lastThinkingEmit = 0;
+
+    const handleChunk = (chunk: string) => {
+      if (!chunk || !options.onDraftStream) return;
+      streamedLive = true;
+      options.onDraftStream({
+        type: 'chunk',
+        sectionTitle,
+        text: chunk,
+        index: i + 1,
+        total: state.outline.length,
+      });
+    };
+
+    const handleReasoning = (chunk: string) => {
+      if (!chunk || !options.onDraftStream) return;
+      const now = Date.now();
+      if (now - lastThinkingEmit < 2500) return;
+      lastThinkingEmit = now;
+      options.onDraftStream({
+        type: 'thinking',
+        sectionTitle,
+        text: chunk,
+        index: i + 1,
+        total: state.outline.length,
+      });
+    };
+
     try {
       content = await generateText({
         prompt,
         role: 'writer',
+        onChunk: handleChunk,
+        onReasoning: handleReasoning,
       });
       // ponytail: hanya tambahkan tabel matriks otomatis jika AI belum membuatnya sama sekali
       if (
@@ -239,15 +270,28 @@ export async function runTaskPipeline(
         !/\|\s*[-:]+/.test(content) &&
         state.sources.length > 0
       ) {
-        content = `${content.trim()}\n\n${buildLiteratureMatrixTable(state.sources)}`;
+        const matrix = buildLiteratureMatrixTable(state.sources);
+        content = `${content.trim()}\n\n${matrix}`;
+        if (streamedLive && options.onDraftStream) {
+          options.onDraftStream({
+            type: 'chunk',
+            sectionTitle,
+            text: `\n\n${matrix}`,
+            index: i + 1,
+            total: state.outline.length,
+          });
+        }
       }
     } catch (err) {
       logger.warn(`Gagal menulis bagian "${sectionTitle}" (percobaan 1): ${String(err)}. Mencoba ulang...`);
       try {
         await new Promise((r) => setTimeout(r, 3000));
+        streamedLive = false;
         content = await generateText({
           prompt,
           role: 'writer',
+          onChunk: handleChunk,
+          onReasoning: handleReasoning,
         });
       } catch (err2) {
         logger.error(`Gagal menulis bagian "${sectionTitle}" permanen: ${String(err2)}`);
@@ -255,8 +299,8 @@ export async function runTaskPipeline(
       }
     }
 
-    // Stream lines & paragraphs via WebSocket callback
-    if (options.onDraftStream && content) {
+    // Fallback smooth line-by-line stream only if provider didn't emit live chunks
+    if (options.onDraftStream && content && !streamedLive) {
       const paragraphs = content.split(/\n\s*\n/).map((p) => p.trim()).filter((p) => p.length > 0);
       for (let pIdx = 0; pIdx < paragraphs.length; pIdx++) {
         const para = paragraphs[pIdx];
@@ -269,7 +313,7 @@ export async function runTaskPipeline(
             index: lIdx + 1,
             total: lines.length,
           });
-          await new Promise((r) => setTimeout(r, 45)); // smooth line stream
+          await new Promise((r) => setTimeout(r, 30));
         }
         options.onDraftStream({
           type: 'paragraph',
@@ -278,8 +322,10 @@ export async function runTaskPipeline(
           index: pIdx + 1,
           total: paragraphs.length,
         });
-        await new Promise((r) => setTimeout(r, 120)); // natural paragraph pause
       }
+    }
+
+    if (options.onDraftStream) {
       options.onDraftStream({
         type: 'section_end',
         sectionTitle,

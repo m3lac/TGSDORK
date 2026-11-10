@@ -85,6 +85,8 @@ export interface GenerateTextOptions {
   role?: 'fast' | 'writer';
   jsonMode?: boolean;
   model?: string;
+  onChunk?: (chunk: string) => void;
+  onReasoning?: (chunk: string) => void;
 }
 
 export type ActiveJobType = 'susun_naskah' | 'audit_revisi' | 'uji_kemiripan' | 'pptx';

@@ -85,7 +85,11 @@ function extractTextFromRaw(raw: string): string {
   }
 }
 
-async function parseChatResponse(res: Response): Promise<string> {
+async function parseChatResponse(
+  res: Response,
+  onChunk?: (chunk: string) => void,
+  onReasoning?: (chunk: string) => void
+): Promise<string> {
   const reader = res.body?.getReader();
   if (!reader) {
     const text = await res.text();
@@ -117,9 +121,18 @@ async function parseChatResponse(res: Response): Promise<string> {
       }
       const choice = json.choices?.[0];
       const delta = choice?.delta;
-      if (delta?.content) contentAcc += delta.content;
-      if (delta?.reasoning_content) reasoningAcc += delta.reasoning_content;
-      if (!delta && choice?.text) contentAcc += choice.text;
+      if (delta?.content) {
+        contentAcc += delta.content;
+        if (onChunk) onChunk(delta.content);
+      }
+      if (delta?.reasoning_content) {
+        reasoningAcc += delta.reasoning_content;
+        if (onReasoning) onReasoning(delta.reasoning_content);
+      }
+      if (!delta && choice?.text) {
+        contentAcc += choice.text;
+        if (onChunk) onChunk(choice.text);
+      }
     } catch (err: unknown) {
       if (err instanceof Error && err.message.startsWith('OpenAI stream error:')) {
         throw err;
@@ -215,7 +228,7 @@ async function callOpenAI(
     throw err;
   }
 
-  let text = await parseChatResponse(res);
+  let text = await parseChatResponse(res, opts.onChunk, opts.onReasoning);
   if (opts.jsonMode) {
     text = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim();
     // extract JSON object if wrapped in prose
