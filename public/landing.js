@@ -157,7 +157,7 @@
         'Metode Vision Transformer terbukti lebih akurat dibandingkan CNN biasa untuk mendeteksi penyakit paru.',
       pane3_after_tag: 'Parafrase Ilmiah',
       pane3_after_text:
-        'Mekanisme <em>self-attention</em> pada arsitektur Vision Transformer menunjukkan performa klasifikasi patologi toraks yang lebih unggul dibandingkan jaringan konvolusional konvensional (Pratama &amp; Santoso, 2024).',
+        'Mekanisme <em>self-attention</em>&#32;pada arsitektur Vision Transformer menunjukkan performa klasifikasi patologi toraks yang lebih unggul dibandingkan jaringan konvolusional konvensional (Pratama &amp; Santoso, 2024).',
       pane4_docx_sub: 'Bab I–III + Matriks Literatur + Daftar Pustaka APA 7th',
       pane4_pptx_sub: '12 Salindia Bersih + Catatan Pembicara per Slide',
       pane4_pdf_sub: 'Tabel komparasi temuan, metode, dan celah riset',
