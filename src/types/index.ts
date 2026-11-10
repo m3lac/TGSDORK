@@ -86,3 +86,20 @@ export interface GenerateTextOptions {
   jsonMode?: boolean;
   model?: string;
 }
+
+export type ActiveJobType = 'susun_naskah' | 'audit_revisi' | 'uji_kemiripan' | 'pptx';
+
+export interface UnifiedActiveJob {
+  id: string;
+  type: ActiveJobType;
+  typeLabel: string;
+  title: string;
+  step: string;
+  detail: string;
+  owner: string;
+  status: 'running' | 'completed' | 'failed';
+  startedAt: number;
+  updatedAt: number;
+  error?: string;
+  resultUrl?: string;
+}

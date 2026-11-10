@@ -11,6 +11,7 @@
   let streamLines = 0;
   let streamParas = 0;
 
+  let activeJobsList = [];
   let archiveTypeFilter = 'all';
   let archiveStatusFilter = 'all';
   let currentReadingMarkdown = '';
@@ -338,6 +339,10 @@
       localStorage.setItem('tgsdork_email', d.email);
       checkAuth();
       loadWorkspaceTasks();
+      loadActiveJobs();
+      if (appWs && appWs.readyState === WebSocket.OPEN) {
+        try { appWs.send(JSON.stringify({ type: 'auth', token: d.token })); } catch {}
+      }
       notifyToast('Verifikasi berhasil! Selamat datang di TGSDORK Studio (' + d.email + ').', 'success');
     } catch (err) {
       notifyToast(err.message || 'Kode verifikasi tidak valid.', 'error');
@@ -765,11 +770,123 @@
     return ageMs >= 0 && ageMs < 15 * 60 * 1000;
   }
 
+  function getMergedRunningJobs() {
+    const runningFromWs = (Array.isArray(activeJobsList) ? activeJobsList : []).filter((j) => j.status === 'running');
+    const wsIds = new Set(runningFromWs.map((j) => j.id));
+    const fallbackTasks = (Array.isArray(cachedTasks) ? cachedTasks : [])
+      .filter((t) => isTaskActivelyRunning(t) && !wsIds.has(t.id))
+      .map((t) => ({
+        id: t.id,
+        type: 'susun_naskah',
+        typeLabel: 'Susun Naskah',
+        title: t.topic,
+        step: t.step,
+        detail: (STEP_LABELS[t.step] || t.step) + '...',
+        status: 'running',
+      }));
+    return [...runningFromWs, ...fallbackTasks];
+  }
+
+  function updateUnifiedRealtimeStatus(jobs) {
+    if (Array.isArray(jobs)) {
+      activeJobsList = jobs;
+    }
+    const runningJobs = getMergedRunningJobs();
+    const runningCount = runningJobs.length;
+
+    const countEl = document.getElementById('ovRunningCount');
+    const pillEl = document.getElementById('ovRunningPill');
+    const noteEl = document.getElementById('ovRunningNote');
+    if (countEl) countEl.textContent = String(runningCount);
+    if (pillEl) {
+      pillEl.textContent = runningCount > 0 ? (runningCount + ' Aktif') : 'Tenang';
+      pillEl.className = 'mini-pill ' + (runningCount > 0 ? 'pink' : 'sky');
+    }
+    if (noteEl) {
+      if (runningCount === 0) {
+        noteEl.textContent = 'Semua proses jalan paralel tanpa antrean';
+      } else if (runningCount === 1) {
+        const j = runningJobs[0];
+        noteEl.textContent = `${j.typeLabel || 'Proses'}: ${j.title || j.detail}`;
+      } else {
+        const types = Array.from(new Set(runningJobs.map((j) => j.typeLabel || 'Proses'))).join(', ');
+        noteEl.textContent = `${runningCount} proses berjalan paralel (${types})`;
+      }
+    }
+
+    const panel = document.getElementById('ovLiveJobsPanel');
+    const listEl = document.getElementById('ovLiveJobsList');
+    const badgeEl = document.getElementById('ovLiveJobsBadge');
+    if (panel && listEl) {
+      if (runningCount === 0) {
+        panel.style.display = 'none';
+        listEl.innerHTML = '';
+      } else {
+        panel.style.display = 'block';
+        if (badgeEl) badgeEl.textContent = runningCount + ' aktif';
+        listEl.innerHTML = runningJobs
+          .map((j) => {
+            const typeClass =
+              j.type === 'susun_naskah' ? 'sky' :
+              j.type === 'audit_revisi' ? 'amber' :
+              j.type === 'uji_kemiripan' ? 'cyan' : 'pink';
+            const targetNav =
+              j.type === 'susun_naskah' ? 'generate' :
+              j.type === 'audit_revisi' ? 'review' :
+              j.type === 'uji_kemiripan' ? 'turnitin' : 'pptx';
+            return (
+              '<div class="ov-live-job-item">' +
+              '<div class="ov-live-job-main">' +
+              '<span class="live-pulse-dot" aria-hidden="true"></span>' +
+              '<div class="ov-live-job-texts">' +
+              '<div style="display:flex;align-items:center;gap:6px;">' +
+              '<span class="tag ' + typeClass + '">' + escapeHtml(j.typeLabel || j.type) + '</span>' +
+              '<strong class="ov-live-job-title">' + escapeHtml(j.title) + '</strong>' +
+              '</div>' +
+              '<span class="ov-live-job-detail">' + escapeHtml(j.detail || 'Sedang memproses...') + '</span>' +
+              '</div>' +
+              '</div>' +
+              '<button type="button" class="action-btn sm" onclick="TGSDORK.switchNav(\'' + targetNav + '\')">Buka &rarr;</button>' +
+              '</div>'
+            );
+          })
+          .join('');
+      }
+    }
+
+    if (runningCount > 0) {
+      const top = runningJobs[0];
+      const targetNav =
+        top.type === 'susun_naskah' ? 'generate' :
+        top.type === 'audit_revisi' ? 'review' :
+        top.type === 'uji_kemiripan' ? 'turnitin' : 'pptx';
+      const prefix = runningCount > 1 ? `[${runningCount} Proses Aktif] ` : `[${top.typeLabel || 'Proses'}] `;
+      updateLiveProgressBanner({
+        active: true,
+        text: prefix + (top.detail || top.title),
+        targetTab: targetNav,
+      });
+    } else {
+      updateLiveProgressBanner({ active: false });
+    }
+  }
+
+  async function loadActiveJobs() {
+    try {
+      const res = await fetch('/api/active-jobs', {
+        headers: { Authorization: 'Bearer ' + getAuthToken() },
+      });
+      if (res.ok) {
+        const jobs = await res.json();
+        updateUnifiedRealtimeStatus(jobs);
+      }
+    } catch {}
+  }
+
   function renderOverviewDashboard(tasks) {
     const list = Array.isArray(tasks) ? tasks : [];
     const total = list.length;
     const done = list.filter((t) => t.step === 'completed').length;
-    const running = list.filter(isTaskActivelyRunning).length;
     const totalSources = list.reduce((acc, t) => acc + (Array.isArray(t.sources) ? t.sources.length : 0), 0);
     const totalSections = list.reduce((acc, t) => acc + (Array.isArray(t.sections) ? t.sections.length : 0), 0);
 
@@ -782,10 +899,8 @@
     setTxt('ovCompletedRate', done + ' selesai');
     setTxt('ovTotalSources', totalSources);
     setTxt('ovTotalSections', totalSections);
-    setTxt('ovRunningCount', running);
-    setTxt('ovRunningPill', running > 0 ? 'Aktif' : 'Tenang');
-    setTxt('ovRunningNote', running > 0 ? running + ' tugas sedang berjalan' : 'Tidak ada proses berjalan');
 
+    updateUnifiedRealtimeStatus();
     renderOverviewRecentList(list);
   }
 
@@ -864,15 +979,7 @@
       renderOverviewDashboard(cachedTasks);
       filterDocs();
 
-      const runningTask = Array.isArray(cachedTasks) && cachedTasks.find(isTaskActivelyRunning);
-      if (runningTask) {
-        updateLiveProgressBanner({
-          active: true,
-          text: 'Sedang memproses: "' + runningTask.topic + '" (' + (STEP_LABELS[runningTask.step] || runningTask.step) + ')...',
-        });
-      } else {
-        updateLiveProgressBanner({ active: false });
-      }
+      updateUnifiedRealtimeStatus();
     } catch (err) {
       console.error('Gagal memuat arsip:', err);
     }
@@ -881,6 +988,7 @@
   function updateLiveProgressBanner(info) {
     const banner = document.getElementById('globalProgressBanner');
     const textEl = document.getElementById('globalProgressText');
+    const linkBtn = banner ? banner.querySelector('.progress-link-btn') : null;
     if (!banner || !textEl) return;
     if (!info || !info.active) {
       banner.style.display = 'none';
@@ -888,6 +996,9 @@
     }
     banner.style.display = 'flex';
     textEl.textContent = info.text || 'Sedang memproses naskah...';
+    if (linkBtn && info.targetTab) {
+      linkBtn.onclick = () => switchNav(info.targetTab);
+    }
   }
 
   async function openDocReader(id) {
@@ -1286,40 +1397,78 @@
   }
 
   // WebSocket Live Stream
+  let appWs = null;
   function initWebSocket() {
     try {
+      if (appWs && (appWs.readyState === WebSocket.OPEN || appWs.readyState === WebSocket.CONNECTING)) {
+        return;
+      }
       const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const ws = new WebSocket(proto + '//' + location.host + '/ws');
+      const token = getAuthToken() || '';
+      const qs = token ? '?token=' + encodeURIComponent(token) : '';
+      const ws = new WebSocket(proto + '//' + location.host + '/ws' + qs);
+      appWs = ws;
+
       ws.onopen = function () {
         const dot = document.getElementById('wsDot');
         const txt = document.getElementById('wsText');
         if (dot) dot.classList.remove('offline');
         if (txt) txt.textContent = 'Terhubung ke server';
+        const t = getAuthToken();
+        if (t) {
+          try {
+            ws.send(JSON.stringify({ type: 'auth', token: t }));
+          } catch {}
+        }
       };
+
       ws.onclose = function () {
         const dot = document.getElementById('wsDot');
         const txt = document.getElementById('wsText');
         if (dot) dot.classList.add('offline');
         if (txt) txt.textContent = 'Menyambung ulang...';
+        appWs = null;
         setTimeout(initWebSocket, 3000);
       };
+
       ws.onmessage = function (event) {
         try {
           const data = JSON.parse(event.data);
-          if (data.type === 'step') {
+          const log = document.getElementById('genLog');
+          const titleEl = document.getElementById('liveSectionTitle');
+
+          if (data.type === 'connected' || data.type === 'authenticated') {
+            if (Array.isArray(data.activeJobs)) {
+              updateUnifiedRealtimeStatus(data.activeJobs);
+            }
+          } else if (data.type === 'job_update') {
+            if (Array.isArray(data.activeJobs)) {
+              updateUnifiedRealtimeStatus(data.activeJobs);
+            }
+            if (data.job) {
+              const j = data.job;
+              if (j.type === 'susun_naskah') {
+                if (j.step) setPipelineStepState(j.step);
+                if (j.status === 'completed' || j.status === 'failed') {
+                  loadWorkspaceTasks();
+                }
+              } else if (j.type === 'audit_revisi') {
+                const btn = document.getElementById('btnDoAutoRevise');
+                if (btn && j.status === 'running' && j.detail) {
+                  btn.textContent = j.detail;
+                }
+              }
+            }
+          } else if (data.type === 'step') {
             setPipelineStepState(data.step);
-            updateLiveProgressBanner({
-              active: true,
-              text: 'Sedang memproses: ' + (data.detail || (STEP_LABELS[data.step] || data.step)) + '...',
-            });
             if (log) {
               log.style.display = 'block';
               log.textContent += '[' + new Date().toLocaleTimeString('id-ID') + '] ' + data.detail + '\n';
               log.scrollTop = log.scrollHeight;
             }
+            loadWorkspaceTasks();
           } else if (data.type === 'draft_stream') {
             const wrap = document.getElementById('liveStreamWrap');
-            const titleEl = document.getElementById('liveSectionTitle');
             const textEl = document.getElementById('liveStreamText');
             const counter = document.getElementById('liveStreamCounter');
             if (wrap) wrap.style.display = 'block';
@@ -1330,6 +1479,7 @@
               updateLiveProgressBanner({
                 active: true,
                 text: 'Menyusun: ' + ev.sectionTitle + '...',
+                targetTab: 'generate',
               });
               if (titleEl) titleEl.textContent = '[' + ev.index + '/' + ev.total + '] ' + ev.sectionTitle;
               if (textEl) {
@@ -1350,14 +1500,24 @@
               if (titleEl) titleEl.textContent = '[' + ev.index + '/' + ev.total + '] ' + ev.sectionTitle + ' tersimpan';
             }
           } else if (data.type === 'completed') {
-            updateLiveProgressBanner({ active: false });
             setPipelineStepState('completed');
             if (titleEl) titleEl.textContent = 'Penyusunan & audit selesai';
             loadWorkspaceTasks();
+            loadActiveJobs();
+          } else if (data.type === 'failed') {
+            loadWorkspaceTasks();
+            loadActiveJobs();
+          } else if (data.type === 'pptx_completed') {
+            loadWorkspaceTasks();
+            loadActiveJobs();
           }
-        } catch {}
+        } catch (err) {
+          console.error('WS message error:', err);
+        }
       };
-    } catch {}
+    } catch (err) {
+      console.error('WS init error:', err);
+    }
   }
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -1532,6 +1692,8 @@
 
           log.textContent += 'ID Tugas: ' + d.id + '\n';
           notifyToast('Penyusunan naskah dimulai di latar belakang.', 'success');
+          loadWorkspaceTasks();
+          loadActiveJobs();
 
           activeTaskPollTimer = setInterval(async () => {
             try {
@@ -1712,6 +1874,7 @@
 
     if (getAuthToken()) {
       loadWorkspaceTasks();
+      loadActiveJobs();
     }
     initWebSocket();
   });

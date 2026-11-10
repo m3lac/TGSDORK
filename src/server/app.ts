@@ -28,7 +28,7 @@ import {
 import { scanTurnitinWithGemini, autoParaphraseTurnitin } from '../pipelines/turnitin.js';
 import { requestOtp, verifyOtp, getSessionUser, removeSession } from '../core/auth.js';
 import { logger } from '../core/logger.js';
-import type { TaskType } from '../types/index.js';
+import type { TaskType, UnifiedActiveJob } from '../types/index.js';
 
 import { FAVICON_B64 } from './favicon.js';
 import { renderLandingHtml } from './landing-html.js';
@@ -90,7 +90,101 @@ function canAccessTask(taskId: string, userEmail: string | null, req?: http.Inco
 }
 
 export function startServer(port = 3456): void {
-  const wsClients = new Set<WebSocket>();
+  const wsClients = new Map<WebSocket, { userEmail: string | null; isDev: boolean }>();
+  const activeJobs = new Map<string, UnifiedActiveJob>();
+
+  function getActiveJobsForClient(userEmail: string | null, isDev: boolean): UnifiedActiveJob[] {
+    const list = Array.from(activeJobs.values());
+    if (isDev && userEmail === 'dev@local') return list;
+    if (!userEmail) return [];
+    return list.filter((j) => j.owner === userEmail);
+  }
+
+  function broadcastJobUpdate(job: UnifiedActiveJob): void {
+    for (const [ws, info] of wsClients.entries()) {
+      if (ws.readyState === WebSocket.OPEN) {
+        if ((info.isDev && info.userEmail === 'dev@local') || (info.userEmail && info.userEmail === job.owner)) {
+          try {
+            ws.send(
+              JSON.stringify({
+                type: 'job_update',
+                job,
+                activeJobs: getActiveJobsForClient(info.userEmail, info.isDev),
+              })
+            );
+          } catch {}
+        }
+      }
+    }
+  }
+
+  function registerJob(opts: {
+    id: string;
+    type: UnifiedActiveJob['type'];
+    typeLabel: string;
+    title: string;
+    step: string;
+    detail: string;
+    owner: string;
+  }): UnifiedActiveJob {
+    const now = Date.now();
+    const job: UnifiedActiveJob = {
+      id: opts.id,
+      type: opts.type,
+      typeLabel: opts.typeLabel,
+      title: opts.title,
+      step: opts.step,
+      detail: opts.detail,
+      owner: opts.owner,
+      status: 'running',
+      startedAt: now,
+      updatedAt: now,
+    };
+    activeJobs.set(opts.id, job);
+    broadcastJobUpdate(job);
+    return job;
+  }
+
+  function updateJobProgress(id: string, step: string, detail: string): void {
+    const job = activeJobs.get(id);
+    if (!job) return;
+    job.step = step;
+    job.detail = detail;
+    job.updatedAt = Date.now();
+    broadcastJobUpdate(job);
+  }
+
+  function finishJob(id: string, detail?: string, resultUrl?: string): void {
+    const job = activeJobs.get(id);
+    if (!job) return;
+    job.status = 'completed';
+    if (detail) job.detail = detail;
+    if (resultUrl) job.resultUrl = resultUrl;
+    job.updatedAt = Date.now();
+    broadcastJobUpdate(job);
+    setTimeout(() => {
+      if (activeJobs.get(id)?.status === 'completed') {
+        activeJobs.delete(id);
+        broadcastJobUpdate({ ...job, status: 'completed' });
+      }
+    }, 20000);
+  }
+
+  function failJob(id: string, error: string): void {
+    const job = activeJobs.get(id);
+    if (!job) return;
+    job.status = 'failed';
+    job.error = error;
+    job.detail = `Gagal: ${error}`;
+    job.updatedAt = Date.now();
+    broadcastJobUpdate(job);
+    setTimeout(() => {
+      if (activeJobs.get(id)?.status === 'failed') {
+        activeJobs.delete(id);
+        broadcastJobUpdate({ ...job, status: 'failed' });
+      }
+    }, 30000);
+  }
 
   // ponytail: in-memory job tracker for PPT-from-title, polling pattern sama dengan audit revise
   const pptxJobs = new Map<string, {
@@ -121,13 +215,15 @@ export function startServer(port = 3456): void {
     updatedAt: number;
   }>();
 
-  function broadcastWs(data: any): void {
+  function broadcastWs(data: unknown, targetOwner?: string): void {
     const raw = JSON.stringify(data);
-    for (const ws of wsClients) {
+    for (const [ws, info] of wsClients.entries()) {
       if (ws.readyState === WebSocket.OPEN) {
-        try {
-          ws.send(raw);
-        } catch {}
+        if (!targetOwner || (info.isDev && info.userEmail === 'dev@local') || (info.userEmail && info.userEmail === targetOwner)) {
+          try {
+            ws.send(raw);
+          } catch {}
+        }
       }
     }
   }
@@ -301,6 +397,16 @@ export function startServer(port = 3456): void {
       return;
     }
 
+    // GET /api/active-jobs
+    if (url.pathname === '/api/active-jobs' && (req.method === 'GET' || req.method === 'HEAD')) {
+      const userEmail = getUserEmail(req, url);
+      const isDev = isLocalDevUiRequest(req);
+      const jobs = getActiveJobsForClient(userEmail, isDev);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(jobs));
+      return;
+    }
+
     // POST /api/tasks/create
     if (url.pathname === '/api/tasks/create' && req.method === 'POST') {
       let body = '';
@@ -365,6 +471,16 @@ export function startServer(port = 3456): void {
           }
           saveCheckpoint(state);
 
+          registerJob({
+            id: state.id,
+            type: 'susun_naskah',
+            typeLabel: 'Susun Naskah',
+            title: state.topic,
+            step: 'dorking',
+            detail: 'Merumuskan kueri literatur & penelusuran jurnal...',
+            owner: userEmail,
+          });
+
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(
             JSON.stringify({
@@ -382,30 +498,32 @@ export function startServer(port = 3456): void {
                 chapterCount: parsed.chapterCount,
                 customChapters: parsed.customChapters,
                 onProgress: (step, detail) => {
+                  updateJobProgress(state.id, step, detail);
                   broadcastWs({
                     type: 'step',
                     taskId: state.id,
                     step,
                     detail,
-                  });
+                  }, userEmail);
                 },
                 onDraftStream: (event) => {
                   broadcastWs({
                     type: 'draft_stream',
                     taskId: state.id,
                     event,
-                  });
+                  }, userEmail);
                 },
               });
 
               // Auto-audit pass: Pastikan skor baseline minimal 80 sejak naskah pertama lahir
               try {
+                updateJobProgress(finalState.id, 'audit', 'Menjalankan auto-audit kelayakan naskah...');
                 broadcastWs({
                   type: 'step',
                   taskId: finalState.id,
                   step: 'audit',
                   detail: 'Menjalankan auto-audit kelayakan naskah...',
-                });
+                }, userEmail);
                 logger.step('AUTO-AUDIT', `Menjalankan auto-audit kelayakan untuk "${finalState.topic}"...`);
                 finalState = await autoReviseTask(finalState.id, 82);
               } catch (auditErr) {
@@ -441,18 +559,20 @@ export function startServer(port = 3456): void {
                 pptx: pptxPath,
               });
 
+              finishJob(finalState.id, 'Naskah selesai disusun dan lulus audit mutu.', `/api/download/${finalState.id}/docx`);
               broadcastWs({
                 type: 'completed',
                 taskId: finalState.id,
                 topic: finalState.topic,
-              });
+              }, userEmail);
               logger.success(`Tugas background "${state.topic}" (${state.id}) selesai disusun dengan standar mutu tinggi.`);
             } catch (err) {
+              failJob(state.id, String(err));
               broadcastWs({
                 type: 'failed',
                 taskId: state.id,
                 error: String(err),
-              });
+              }, userEmail);
               logger.error(`Gagal menyelesaikan tugas background ${state.id}: ${err}`);
             }
           })();
@@ -489,6 +609,15 @@ export function startServer(port = 3456): void {
           const jobId = crypto.randomBytes(8).toString('hex');
           const now = Date.now();
           pptxJobs.set(jobId, { status: 'running', topic, owner: userEmail, createdAt: now, updatedAt: now });
+          registerJob({
+            id: jobId,
+            type: 'pptx',
+            typeLabel: 'PowerPoint',
+            title: topic,
+            step: 'generating',
+            detail: 'Menyusun salindia 10–14 slide beserta catatan pemateri...',
+            owner: userEmail,
+          });
 
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ success: true, jobId, topic }));
@@ -503,7 +632,8 @@ export function startServer(port = 3456): void {
                 job.status = 'completed';
                 job.updatedAt = Date.now();
               }
-              broadcastWs({ type: 'pptx_completed', jobId, topic });
+              finishJob(jobId, `PowerPoint "${topic}" selesai dibuat!`, `/api/download-pptx/${jobId}`);
+              broadcastWs({ type: 'pptx_completed', jobId, topic }, userEmail);
             } catch (err) {
               logger.error(`Gagal membuat PPTX dari judul "${topic}": ${err}`);
               const job = pptxJobs.get(jobId);
@@ -512,6 +642,7 @@ export function startServer(port = 3456): void {
                 job.error = String(err);
                 job.updatedAt = Date.now();
               }
+              failJob(jobId, String(err));
             }
           })();
         } catch (err) {
@@ -578,9 +709,23 @@ export function startServer(port = 3456): void {
       let body = '';
       req.on('data', (chunk) => (body += chunk));
       req.on('end', async () => {
+        const jobOwner = getUserEmail(req, url) || (isLocalDevUiRequest(req) ? 'dev@local' : 'anonymous');
+        const reviewJobId = 'rev_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+        let jobRegistered = false;
         try {
           const parsed = JSON.parse(body) as { filename: string; data: string };
           const safeName = path.basename(parsed.filename || 'uploaded_document.docx');
+          registerJob({
+            id: reviewJobId,
+            type: 'audit_revisi',
+            typeLabel: 'Audit Dokumen',
+            title: safeName,
+            step: 'reviewing',
+            detail: 'Memeriksa struktur naskah, rujukan & PUEBI...',
+            owner: jobOwner,
+          });
+          jobRegistered = true;
+
           const tmpPath = path.join(os.tmpdir(), `tgsdork_${Date.now()}_${safeName}`);
           fs.writeFileSync(tmpPath, Buffer.from(parsed.data, 'base64'));
 
@@ -592,9 +737,11 @@ export function startServer(port = 3456): void {
             fs.writeFileSync(destReview, result, 'utf-8');
           } catch {}
 
+          finishJob(reviewJobId, `Pemeriksaan kelayakan "${safeName}" selesai.`);
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ result, text, filename: safeName }));
         } catch (err) {
+          if (jobRegistered) failJob(reviewJobId, String(err));
           res.writeHead(500, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: String(err) }));
         }
@@ -615,6 +762,7 @@ export function startServer(port = 3456): void {
           };
           const jobId = 'rev_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
           const now = Date.now();
+          const jobOwner = getUserEmail(req, url) || (isLocalDevUiRequest(req) ? 'dev@local' : 'anonymous');
           for (const [id, j] of auditReviseJobs.entries()) {
             if (now - j.updatedAt > 3600000) auditReviseJobs.delete(id);
           }
@@ -622,6 +770,15 @@ export function startServer(port = 3456): void {
             status: 'running',
             progress: 'Memulai auto-revisi akademik...',
             updatedAt: now,
+          });
+          registerJob({
+            id: jobId,
+            type: 'audit_revisi',
+            typeLabel: 'Auto-Revisi',
+            title: parsed.filename || 'Naskah_Revisi',
+            step: 'revising',
+            detail: 'Memulai auto-revisi akademik...',
+            owner: jobOwner,
           });
 
           res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -640,6 +797,7 @@ export function startServer(port = 3456): void {
                     j.progress = stepInfo;
                     j.updatedAt = Date.now();
                   }
+                  updateJobProgress(jobId, 'revising', stepInfo);
                 }
               );
 
@@ -664,6 +822,7 @@ export function startServer(port = 3456): void {
                 },
                 updatedAt: Date.now(),
               });
+              finishJob(jobId, `Revisi selesai dengan skor ${revised.finalScore}/100 (${revised.rounds} putaran).`, `/api/download-audit/${encodeURIComponent(revised.fileName)}/docx`);
             } catch (err) {
               logger.error(`Auto-revise job ${jobId} gagal: ${err}`);
               auditReviseJobs.set(jobId, {
@@ -672,6 +831,7 @@ export function startServer(port = 3456): void {
                 error: String(err),
                 updatedAt: Date.now(),
               });
+              failJob(jobId, String(err));
             }
           })();
         } catch (err) {
@@ -744,6 +904,9 @@ export function startServer(port = 3456): void {
       let body = '';
       req.on('data', (chunk) => (body += chunk));
       req.on('end', async () => {
+        const jobOwner = getUserEmail(req, url) || (isLocalDevUiRequest(req) ? 'dev@local' : 'anonymous');
+        const scanJobId = 'tscan_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+        let jobRegistered = false;
         try {
           const parsed = JSON.parse(body) as {
             filename?: string;
@@ -752,6 +915,17 @@ export function startServer(port = 3456): void {
           };
           let text = parsed.text || '';
           const filename = parsed.filename || 'naskah.txt';
+
+          registerJob({
+            id: scanJobId,
+            type: 'uji_kemiripan',
+            typeLabel: 'Uji Kemiripan',
+            title: filename,
+            step: 'scanning',
+            detail: 'Memindai proporsi kemiripan & pola kalimat...',
+            owner: jobOwner,
+          });
+          jobRegistered = true;
 
           if (parsed.data) {
             const safeName = path.basename(filename);
@@ -765,6 +939,7 @@ export function startServer(port = 3456): void {
           }
 
           const scan = await scanTurnitinWithGemini(filename, text);
+          finishJob(scanJobId, `Skor kemiripan: ${scan.similarityScore}% (Indeks AI ${scan.aiScore}%).`);
 
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(
@@ -778,6 +953,7 @@ export function startServer(port = 3456): void {
             })
           );
         } catch (err) {
+          if (jobRegistered) failJob(scanJobId, String(err));
           res.writeHead(500, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: String(err) }));
         }
@@ -790,12 +966,26 @@ export function startServer(port = 3456): void {
       let body = '';
       req.on('data', (chunk) => (body += chunk));
       req.on('end', async () => {
+        const jobOwner = getUserEmail(req, url) || (isLocalDevUiRequest(req) ? 'dev@local' : 'anonymous');
+        const paraJobId = 'tpara_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+        let jobRegistered = false;
         try {
           const parsed = JSON.parse(body) as {
             filename: string;
             text: string;
             turnitinReport: string;
           };
+          registerJob({
+            id: paraJobId,
+            type: 'uji_kemiripan',
+            typeLabel: 'Parafrase Naskah',
+            title: parsed.filename || 'Naskah_Turnitin',
+            step: 'paraphrasing',
+            detail: 'Menulis ulang pola kalimat agar lolos Turnitin...',
+            owner: jobOwner,
+          });
+          jobRegistered = true;
+
           const result = await autoParaphraseTurnitin(
             parsed.filename || 'Naskah_Turnitin',
             parsed.text,
@@ -812,6 +1002,8 @@ export function startServer(port = 3456): void {
             }
           } catch {}
 
+          finishJob(paraJobId, `Parafrase selesai: kemiripan turun ke ${result.newSimilarityScore}%.`, `/api/download-turnitin/${encodeURIComponent(result.fileName)}/docx`);
+
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(
             JSON.stringify({
@@ -826,6 +1018,7 @@ export function startServer(port = 3456): void {
             })
           );
         } catch (err) {
+          if (jobRegistered) failJob(paraJobId, String(err));
           res.writeHead(500, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: String(err) }));
         }
@@ -909,6 +1102,9 @@ export function startServer(port = 3456): void {
       let body = '';
       req.on('data', (chunk) => (body += chunk));
       req.on('end', async () => {
+        const jobTitle = String(taskId);
+        const revJobId = `revisesec_${taskId}_${Date.now()}`;
+        let jobRegistered = false;
         try {
           const parsed = JSON.parse(body) as { sectionTitle?: string; instruction?: string };
           const sectionTitle = String(parsed.sectionTitle || '').trim();
@@ -918,6 +1114,17 @@ export function startServer(port = 3456): void {
             res.end(JSON.stringify({ error: 'Nama bab wajib dipilih.' }));
             return;
           }
+          registerJob({
+            id: revJobId,
+            type: 'audit_revisi',
+            typeLabel: 'Revisi Bab',
+            title: `${sectionTitle} (${jobTitle})`,
+            step: 'revising',
+            detail: `Menulis ulang bab "${sectionTitle}"...`,
+            owner: userEmail || 'dev@local',
+          });
+          jobRegistered = true;
+
           const updatedState = await reviseTask(taskId, instruction, sectionTitle);
           try {
             const taskDir = getTaskDir(updatedState.id);
@@ -928,9 +1135,11 @@ export function startServer(port = 3456): void {
               copyToDocuments(updatedState, { pdf: pdfPath });
             }
           } catch {}
+          finishJob(revJobId, `Bab "${sectionTitle}" berhasil diperbarui.`);
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ success: true, task: updatedState }));
         } catch (err) {
+          if (jobRegistered) failJob(revJobId, String(err));
           res.writeHead(500, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: String(err) }));
         }
@@ -949,13 +1158,25 @@ export function startServer(port = 3456): void {
         return;
       }
 
+      const revJobId = `autorev_${taskId}`;
+      registerJob({
+        id: revJobId,
+        type: 'audit_revisi',
+        typeLabel: 'Auto-Revisi',
+        title: taskId,
+        step: 'revising',
+        detail: 'Mengevaluasi dan merevisi naskah (target >= 82)...',
+        owner: userEmail || 'dev@local',
+      });
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ success: true, message: 'Revisi otomatis dimulai di background' }));
       (async () => {
         try {
           await autoReviseTask(taskId, 82);
+          finishJob(revJobId, `Auto-revisi naskah selesai!`);
         } catch (err) {
           logger.error(`Auto-revise gagal untuk task ${taskId}: ${err}`);
+          failJob(revJobId, String(err));
         }
       })();
       return;
@@ -966,14 +1187,31 @@ export function startServer(port = 3456): void {
       let body = '';
       req.on('data', (chunk) => (body += chunk));
       req.on('end', async () => {
+        const jobOwner = getUserEmail(req, url) || (isLocalDevUiRequest(req) ? 'dev@local' : 'anonymous');
+        const revJobId = 'rev_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+        let jobRegistered = false;
         try {
           const parsed = JSON.parse(body) as { target: string; focus?: string };
           const resolved = resolveTargetFile(parsed.target);
+          const fileName = path.basename(resolved);
+          registerJob({
+            id: revJobId,
+            type: 'audit_revisi',
+            typeLabel: 'Audit Dokumen',
+            title: fileName,
+            step: 'reviewing',
+            detail: 'Memeriksa berkas naskah & kelayakan akademik...',
+            owner: jobOwner,
+          });
+          jobRegistered = true;
+
           const text = await readTextFromFile(resolved);
           const result = await reviewFile(parsed.target, parsed.focus);
+          finishJob(revJobId, `Pemeriksaan kelayakan "${fileName}" selesai.`);
           res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ result, text, filename: path.basename(resolved) }));
+          res.end(JSON.stringify({ result, text, filename: fileName }));
         } catch (err) {
+          if (jobRegistered) failJob(revJobId, String(err));
           res.writeHead(500, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: String(err) }));
         }
@@ -1179,9 +1417,40 @@ export function startServer(port = 3456): void {
   });
 
   const wss = new WebSocketServer({ server, path: '/ws' });
-  wss.on('connection', (ws) => {
-    wsClients.add(ws);
-    ws.send(JSON.stringify({ type: 'connected', time: Date.now() }));
+  wss.on('connection', (ws, req) => {
+    const reqUrl = new URL(req.url || '/ws', `http://localhost:${port}`);
+    const userEmail = getUserEmail(req, reqUrl);
+    const isDev = isLocalDevUiRequest(req);
+    const clientInfo = { userEmail, isDev };
+    wsClients.set(ws, clientInfo);
+
+    ws.send(
+      JSON.stringify({
+        type: 'connected',
+        time: Date.now(),
+        activeJobs: getActiveJobsForClient(userEmail, isDev),
+      })
+    );
+
+    ws.on('message', (raw) => {
+      try {
+        const msg = JSON.parse(String(raw));
+        if (msg.type === 'auth' && typeof msg.token === 'string') {
+          const authEmail = getSessionUser(msg.token.trim());
+          if (authEmail) {
+            clientInfo.userEmail = authEmail;
+            ws.send(
+              JSON.stringify({
+                type: 'authenticated',
+                email: authEmail,
+                activeJobs: getActiveJobsForClient(authEmail, clientInfo.isDev),
+              })
+            );
+          }
+        }
+      } catch {}
+    });
+
     ws.on('close', () => wsClients.delete(ws));
     ws.on('error', () => wsClients.delete(ws));
   });

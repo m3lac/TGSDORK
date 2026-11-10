@@ -156,13 +156,25 @@ export function renderStudioHtml(devUiMode = false): string {
               </article>
 
               <article class="bento-card">
-                <span class="card-label">Status Antrean</span>
+                <span class="card-label">Proses Aktif Real-Time</span>
                 <div class="card-stat">
                   <strong id="ovRunningCount">0</strong>
                   <span class="mini-pill sky" id="ovRunningPill">Tenang</span>
                 </div>
-                <span class="card-foot" id="ovRunningNote">Tidak ada proses berjalan</span>
+                <span class="card-foot" id="ovRunningNote">Semua proses jalan paralel tanpa antrean</span>
               </article>
+            </div>
+
+            <div class="panel ov-live-jobs-panel" id="ovLiveJobsPanel" style="display: none; margin-bottom: 16px;">
+              <div class="panel-header" style="margin-bottom: 10px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span class="live-pulse-dot" aria-hidden="true"></span>
+                  <div class="panel-title" style="margin: 0;">Aktivitas Proses Berjalan</div>
+                  <span class="mini-pill sky" id="ovLiveJobsBadge">0 aktif</span>
+                </div>
+                <span style="font-size: 11.5px; color: var(--ink-muted);">Diproses bersamaan secara paralel &bull; Pembaruan otomatis 1:1</span>
+              </div>
+              <div id="ovLiveJobsList" class="ov-live-jobs-list"></div>
             </div>
 
             <div class="ov-quick-grid">
