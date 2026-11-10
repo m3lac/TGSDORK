@@ -168,7 +168,30 @@
       const h2 = line.match(/^##\s+(.+)/);
       if (h2) {
         flushLists();
-        html.push('<h2>' + formatInlineMarkdown(h2[1]) + '</h2>');
+        const raw = h2[1].trim();
+        const chapMatch = raw.match(/^(BAB\s+[0-9IVX]+|BAGIAN\s+[0-9IVX]+|CHAPTER\s+[0-9IVX]+)\s*[:.-]?\s*(.*)$/i);
+        if (chapMatch) {
+          const num = escapeHtml(chapMatch[1].toUpperCase());
+          const rest = escapeHtml((chapMatch[2] || '').trim().toUpperCase());
+          html.push(
+            '<div class="reader-chapter-divider"><hr /></div>' +
+            '<h2 class="chapter-heading">' +
+            '<span class="chapter-num">' + num + '</span>' +
+            (rest ? '<span class="chapter-title">' + rest + '</span>' : '') +
+            '</h2>'
+          );
+        } else if (/^(?:daftar\s+pustaka|references|bibliography|lampiran)\b/i.test(raw)) {
+          html.push(
+            '<div class="reader-chapter-divider"><hr /></div>' +
+            '<h2 class="chapter-heading"><span class="chapter-title">' + escapeHtml(raw.toUpperCase()) + '</span></h2>'
+          );
+        } else if (/^(?:abstrak|abstract)\b/i.test(raw)) {
+          html.push(
+            '<h2 class="chapter-heading abstrak-heading"><span class="chapter-title">' + escapeHtml(raw.toUpperCase()) + '</span></h2>'
+          );
+        } else {
+          html.push('<h2>' + formatInlineMarkdown(raw) + '</h2>');
+        }
         continue;
       }
       const h1 = line.match(/^#\s+(.+)/);
