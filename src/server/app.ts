@@ -96,14 +96,16 @@ export function startServer(port = 3456): void {
   function getActiveJobsForClient(userEmail: string | null, isDev: boolean): UnifiedActiveJob[] {
     const list = Array.from(activeJobs.values());
     if (isDev && userEmail === 'dev@local') return list;
-    if (!userEmail) return list;
-    return list.filter((j) => !j.owner || j.owner === userEmail || j.owner === 'dev@local' || j.owner === 'anonymous');
+    if (!userEmail) return [];
+    const normalized = userEmail.toLowerCase();
+    return list.filter((j) => j.owner.toLowerCase() === normalized);
   }
 
   function broadcastJobUpdate(job: UnifiedActiveJob): void {
+    const jobOwner = job.owner.toLowerCase();
     for (const [ws, info] of wsClients.entries()) {
       if (ws.readyState === WebSocket.OPEN) {
-        if (!info.userEmail || (info.isDev && info.userEmail === 'dev@local') || (info.userEmail.toLowerCase() === job.owner.toLowerCase())) {
+        if ((info.isDev && info.userEmail === 'dev@local') || (info.userEmail && info.userEmail.toLowerCase() === jobOwner)) {
           try {
             ws.send(
               JSON.stringify({
@@ -217,9 +219,10 @@ export function startServer(port = 3456): void {
 
   function broadcastWs(data: unknown, targetOwner?: string): void {
     const raw = JSON.stringify(data);
+    const targetLower = targetOwner ? targetOwner.toLowerCase() : null;
     for (const [ws, info] of wsClients.entries()) {
       if (ws.readyState === WebSocket.OPEN) {
-        if (!targetOwner || !info.userEmail || (info.isDev && info.userEmail === 'dev@local') || (info.userEmail.toLowerCase() === targetOwner.toLowerCase())) {
+        if (!targetLower || (info.isDev && info.userEmail === 'dev@local') || (info.userEmail && info.userEmail.toLowerCase() === targetLower)) {
           try {
             ws.send(raw);
           } catch {}
@@ -400,6 +403,11 @@ export function startServer(port = 3456): void {
     // GET /api/active-jobs
     if (url.pathname === '/api/active-jobs' && (req.method === 'GET' || req.method === 'HEAD')) {
       const userEmail = getUserEmail(req, url);
+      if (!userEmail) {
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify([]));
+        return;
+      }
       const isDev = isLocalDevUiRequest(req);
       const jobs = getActiveJobsForClient(userEmail, isDev);
       res.writeHead(200, { 'Content-Type': 'application/json' });
