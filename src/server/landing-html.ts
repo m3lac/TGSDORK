@@ -461,7 +461,7 @@ export function renderLandingHtml(devUiMode = false): string {
         <div class="lp-section-head">
           <div>
             <span class="lp-eyebrow" data-i18n="contact_eyebrow">GET IN TOUCH</span>
-            <h2 data-i18n="contact_heading">Contact &amp; Founder</h2>
+            <h2 data-i18n="contact_heading">Contact &amp; Support</h2>
           </div>
           <p class="lp-section-sub" data-i18n="contact_sub">Have questions, feedback, partnership inquiries, or research challenges? Reach out directly.</p>
         </div>
@@ -472,7 +472,7 @@ export function renderLandingHtml(devUiMode = false): string {
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><polyline points="3 7 12 13 21 7"/></svg>
             </div>
             <div class="lp-contact-info">
-              <span class="lp-contact-type" data-i18n="contact_email_label">Official Founder Email</span>
+              <span class="lp-contact-type" data-i18n="contact_email_label">Official Email</span>
               <strong class="lp-contact-val">founder@tgsdork.com</strong>
               <p class="lp-contact-note" data-i18n="contact_email_note">Direct inbox for inquiries, enterprise access, and research collaboration.</p>
             </div>
@@ -487,12 +487,12 @@ export function renderLandingHtml(devUiMode = false): string {
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
             </div>
             <div class="lp-contact-info">
-              <span class="lp-contact-type" data-i18n="contact_ig_label">Founder Instagram</span>
+              <span class="lp-contact-type" data-i18n="contact_ig_label">Instagram</span>
               <strong class="lp-contact-val">@nelosif_</strong>
               <p class="lp-contact-note" data-i18n="contact_ig_note">Connect directly on Instagram for product updates, discussions, and quick DMs.</p>
             </div>
             <span class="lp-contact-action">
-              <span data-i18n="contact_ig_btn">Follow &amp; DM</span>
+              <span data-i18n="contact_ig_btn">Follow</span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17L17 7M9 7h8v8"/></svg>
             </span>
           </a>

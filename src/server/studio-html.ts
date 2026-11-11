@@ -91,7 +91,7 @@ export function renderStudioHtml(devUiMode = false): string {
 
         <div class="sidebar-footer">
           <span class="sr-only" id="wsText">Terhubung</span>
-          <button type="button" class="rail-contact-btn" title="Kontak &amp; Hubungi Founder" aria-label="Kontak Founder" onclick="TGSDORK.openContactModal()">
+          <button type="button" class="rail-contact-btn" title="Kontak &amp; Bantuan" aria-label="Kontak Kami" onclick="TGSDORK.openContactModal()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" />
             </svg>
@@ -120,7 +120,7 @@ export function renderStudioHtml(devUiMode = false): string {
               <span class="user-avatar-orb" id="userAvatarInitials" aria-hidden="true">TG</span>
               <span class="user-chip-email" id="userEmailLabel">Akun</span>
             </div>
-            <button type="button" class="btn-pill btn-white sm" id="headerContactBtn" onclick="TGSDORK.openContactModal()" title="Hubungi Founder">
+            <button type="button" class="btn-pill btn-white sm" id="headerContactBtn" onclick="TGSDORK.openContactModal()" title="Kontak &amp; Bantuan">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
               <span>Kontak</span>
             </button>
@@ -250,7 +250,7 @@ export function renderStudioHtml(devUiMode = false): string {
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
                   </div>
                   <div>
-                    <strong class="ov-contact-title">Hubungi Founder TGSDORK</strong>
+                    <strong class="ov-contact-title">Hubungi Tim TGSDORK</strong>
                     <span class="ov-contact-sub">Masukan fitur, kendala riset, atau kolaborasi langsung.</span>
                   </div>
                 </div>
@@ -843,7 +843,7 @@ export function renderStudioHtml(devUiMode = false): string {
         </button>
       </div>
 
-      <h2 id="contactModalTitle">Hubungi Founder</h2>
+      <h2 id="contactModalTitle">Kontak &amp; Bantuan</h2>
       <p id="contactModalSubtitle">Punya pertanyaan, saran fitur, kerja sama riset, atau kendala? Hubungi langsung melalui kanal di bawah ini:</p>
 
       <div class="contact-modal-list">
@@ -853,7 +853,7 @@ export function renderStudioHtml(devUiMode = false): string {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><polyline points="3 7 12 13 21 7"/></svg>
             </div>
             <div class="contact-modal-meta">
-              <span>Email Founder</span>
+              <span>Email Resmi</span>
               <strong>founder@tgsdork.com</strong>
             </div>
           </div>
@@ -873,7 +873,7 @@ export function renderStudioHtml(devUiMode = false): string {
               <strong>@nelosif_</strong>
             </div>
           </div>
-          <a href="https://instagram.com/nelosif_" target="_blank" rel="noopener noreferrer" class="btn-pill btn-hot-pink sm">Buka IG</a>
+          <a href="https://instagram.com/nelosif_" target="_blank" rel="noopener noreferrer" class="btn-pill btn-hot-pink sm">Buka</a>
         </div>
       </div>
     </div>
