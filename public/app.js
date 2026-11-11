@@ -26,13 +26,23 @@
     audit: 'Audit mutu',
     exporting: 'Mengekspor',
   };
+  const STEP_LABELS_EN = {
+    init: 'Initializing',
+    dorking: 'Formulating query',
+    searching: 'Searching journals',
+    extracting: 'Verifying data',
+    drafting: 'Drafting chapters',
+    audit: 'Quality audit',
+    exporting: 'Exporting files',
+  };
   const DEV_UI_MODE = Boolean(window.__TGSDORK_DEV_UI__);
 
   function getDisplayUserName() {
+    const isEn = getStudioLanguage() === 'en';
     const email = localStorage.getItem('tgsdork_email') || (DEV_UI_MODE ? 'dev@local' : '');
-    if (!email || email === 'dev@local') return 'Peneliti';
+    if (!email || email === 'dev@local') return isEn ? 'Researcher' : 'Peneliti';
     const localPart = email.split('@')[0].replace(/[._-]+/g, ' ').trim();
-    if (!localPart) return 'Peneliti';
+    if (!localPart) return isEn ? 'Researcher' : 'Peneliti';
     return localPart
       .split(/\s+/)
       .slice(0, 2)
@@ -1115,26 +1125,23 @@
     const countEl = document.getElementById('ovRunningCount');
     const pillEl = document.getElementById('ovRunningPill');
     const noteEl = document.getElementById('ovRunningNote');
+    const isEn = getStudioLanguage() === 'en';
     if (countEl) countEl.textContent = String(runningCount);
     if (pillEl) {
-      pillEl.textContent = runningCount > 0 ? (runningCount + ' Aktif') : 'Tenang';
+      pillEl.textContent = runningCount > 0 ? (runningCount + (isEn ? ' Active' : ' Aktif')) : (isEn ? 'Idle' : 'Tenang');
       pillEl.className = 'mini-pill ' + (runningCount > 0 ? 'pink' : 'sky');
     }
     if (noteEl) {
       if (runningCount === 0) {
-        noteEl.textContent = 'Semua proses jalan paralel tanpa antrean';
+        noteEl.textContent = isEn ? 'All processes run in parallel without queueing' : 'Semua proses jalan paralel tanpa antrean';
       } else if (runningCount === 1) {
         const j = runningJobs[0];
-        noteEl.textContent = `${j.typeLabel || 'Proses'}: ${j.title || j.detail}`;
+        noteEl.textContent = `${j.typeLabel || (isEn ? 'Process' : 'Proses')}: ${j.title || j.detail}`;
       } else {
-        const types = Array.from(new Set(runningJobs.map((j) => j.typeLabel || 'Proses'))).join(', ');
-        noteEl.textContent = `${runningCount} proses berjalan paralel (${types})`;
+        const types = Array.from(new Set(runningJobs.map((j) => j.typeLabel || (isEn ? 'Process' : 'Proses')))).join(', ');
+        noteEl.textContent = isEn ? `${runningCount} parallel processes running (${types})` : `${runningCount} proses berjalan paralel (${types})`;
       }
     }
-
-    const panel = document.getElementById('ovLiveJobsPanel');
-    const listEl = document.getElementById('ovLiveJobsList');
-    const badgeEl = document.getElementById('ovLiveJobsBadge');
     if (panel && listEl) {
       if (runningCount === 0) {
         panel.style.display = 'none';
@@ -1247,25 +1254,26 @@
         const idAttr = escapeHtml(t.id);
         const dl = (ext) => '/api/download/' + encodeURIComponent(t.id) + '/' + ext + qs;
 
+        const isEn = getStudioLanguage() === 'en';
         const statusHtml = isDone
-          ? '<span class="status-pill done">Selesai</span>'
+          ? '<span class="status-pill done">' + (isEn ? 'Completed' : 'Selesai') + '</span>'
           : isRunning
-          ? '<span class="status-pill running">' + escapeHtml(STEP_LABELS[t.step] || 'Memproses') + '</span>'
-          : '<span class="status-pill">Tersimpan</span>';
+          ? '<span class="status-pill running">' + escapeHtml((isEn ? (STEP_LABELS_EN[t.step] || 'Processing') : (STEP_LABELS[t.step] || 'Memproses'))) + '</span>'
+          : '<span class="status-pill">' + (isEn ? 'Saved' : 'Tersimpan') + '</span>';
 
         const actHtml = isDone
           ? '<div class="actions-row nowrap">' +
-            '<button type="button" class="action-btn" data-action="read-doc" data-id="' + idAttr + '">Baca</button>' +
+            '<button type="button" class="action-btn" data-action="read-doc" data-id="' + idAttr + '">' + (isEn ? 'Read' : 'Baca') + '</button>' +
             '<a class="action-btn accent" href="' + dl('docx') + '">DOCX</a>' +
             '<a class="action-btn" href="' + dl('pdf') + '">PDF</a>' +
             '</div>'
           : '<div class="actions-row nowrap">' +
-            '<button type="button" class="action-btn" onclick="TGSDORK.switchNav(\'workspace\')">Arsip</button>' +
+            '<button type="button" class="action-btn" onclick="TGSDORK.switchNav(\'workspace\')">' + (isEn ? 'Archive' : 'Arsip') + '</button>' +
             '</div>';
 
         return (
           '<tr>' +
-          '<td class="doc-title-cell"><strong>' + escapeHtml(t.topic) + '</strong><span>' + secCount + ' bagian &bull; ' + srcCount + ' rujukan</span></td>' +
+          '<td class="doc-title-cell"><strong>' + escapeHtml(t.topic) + '</strong><span>' + secCount + (isEn ? ' sections &bull; ' : ' bagian &bull; ') + srcCount + (isEn ? ' sources' : ' rujukan') + '</span></td>' +
           '<td><span class="tag">' + escapeHtml(t.taskType || 'makalah') + '</span></td>' +
           '<td>' + escapeHtml(dateStr) + '</td>' +
           '<td>' + statusHtml + '</td>' +
@@ -1275,10 +1283,11 @@
       })
       .join('');
 
+    const isEn = getStudioLanguage() === 'en';
     box.innerHTML =
       '<div class="bento-table-wrap">' +
       '<table class="bento-table">' +
-      '<thead><tr><th>JUDUL NASKAH</th><th>JENIS</th><th>TANGGAL</th><th>STATUS</th><th style="text-align:right;">AKSI</th></tr></thead>' +
+      '<thead><tr><th>' + (isEn ? 'MANUSCRIPT TITLE' : 'JUDUL NASKAH') + '</th><th>' + (isEn ? 'TYPE' : 'JENIS') + '</th><th>' + (isEn ? 'DATE' : 'TANGGAL') + '</th><th>' + (isEn ? 'STATUS' : 'STATUS') + '</th><th style="text-align:right;">' + (isEn ? 'ACTIONS' : 'AKSI') + '</th></tr></thead>' +
       '<tbody>' + rows + '</tbody>' +
       '</table>' +
       '</div>';
@@ -1612,8 +1621,189 @@
     if (st) st.textContent = meta.title;
     if (sub) sub.textContent = meta.subtitle;
 
+    const isEn = lang === 'en';
+
+    const setOpt = (selId, val, text) => {
+      const opt = document.querySelector(`#${selId} option[value="${val}"]`);
+      if (opt) opt.textContent = text;
+    };
+    setOpt('taskType', 'makalah', isEn ? 'Academic Paper' : 'Makalah Ilmiah');
+    setOpt('taskType', 'skripsi', isEn ? 'Thesis / Dissertation' : 'Skripsi / Tesis');
+    setOpt('taskType', 'lit-review', isEn ? 'Literature Review' : 'Tinjauan Pustaka');
+    setOpt('taskType', 'presentasi', isEn ? 'Presentation Outline' : 'Kerangka Presentasi');
+
+    setOpt('chapterConfig', 'auto', isEn ? 'Complete Standard (Ch. I–V)' : 'Standar Lengkap (Bab I–V)');
+    setOpt('chapterConfig', '4', isEn ? '4 Chapters + Abstract' : '4 Bab + Abstrak');
+    setOpt('chapterConfig', '3', isEn ? '3 Brief Chapters' : '3 Bab Ringkas');
+    setOpt('chapterConfig', '5', isEn ? '5 Full Thesis Chapters' : '5 Bab Skripsi Penuh');
+    setOpt('chapterConfig', 'custom', isEn ? 'Custom Chapter List' : 'Daftar Bab Kustom');
+
+    setOpt('coverToggle', 'off', isEn ? 'No cover' : 'Tanpa sampul');
+    setOpt('coverToggle', 'on', isEn ? 'Institutional cover' : 'Sampul institusi');
+    setOpt('pptxTheme', 'auto', isEn ? 'Auto based on topic' : 'Otomatis sesuai topik');
+
+    setOpt('archiveSortSelect', 'newest', isEn ? 'Newest' : 'Terbaru');
+    setOpt('archiveSortSelect', 'oldest', isEn ? 'Oldest' : 'Terlama');
+    setOpt('archiveSortSelect', 'sources', isEn ? 'Most Citations' : 'Rujukan Terbanyak');
+    setOpt('archiveSortSelect', 'title', isEn ? 'Title A–Z' : 'Judul A–Z');
+
+    const setLbl = (forAttr, text) => {
+      const el = document.querySelector(`label[for="${forAttr}"]`);
+      if (el) el.textContent = text;
+    };
+    setLbl('coverInstitution', isEn ? 'University / Institution' : 'Perguruan Tinggi');
+    setLbl('coverFaculty', isEn ? 'Faculty' : 'Fakultas');
+    setLbl('coverProgram', isEn ? 'Study Program / Major' : 'Program Studi');
+    setLbl('coverAuthor', isEn ? 'Author Name' : 'Nama Penulis');
+    setLbl('coverNim', isEn ? 'Student ID / NIM' : 'NIM');
+    setLbl('coverSupervisor', isEn ? 'Advisor / Supervisor' : 'Dosen Pembimbing');
+    setLbl('coverCity', isEn ? 'City' : 'Kota');
+
+    const setStep = (id, label, desc) => {
+      const item = document.getElementById(id);
+      if (item) {
+        const lbl = item.querySelector('.step-label');
+        const dsc = item.querySelector('.step-desc');
+        if (lbl) lbl.textContent = label;
+        if (dsc) dsc.textContent = desc;
+      }
+    };
+    setStep('pipe-dorking', isEn ? 'Query Formulation' : 'Perumusan Kueri', isEn ? 'Formulating literature queries' : 'Menyusun kueri literatur');
+    setStep('pipe-searching', isEn ? 'Literature Search' : 'Penelusuran Literatur', isEn ? 'Searching articles & journals' : 'Pencarian artikel dan jurnal');
+    setStep('pipe-extracting', isEn ? 'Data Extraction' : 'Penyaringan Data', isEn ? 'Extracting & verifying sources' : 'Ekstraksi dan verifikasi rujukan');
+    setStep('pipe-drafting', isEn ? 'Chapter Drafting' : 'Penulisan Bab', isEn ? '1:1 citation locking' : 'Sinkronisasi sitasi 1:1');
+    setStep('pipe-audit', isEn ? 'Audit & Export' : 'Audit & Ekspor', isEn ? 'Quality audit & export' : 'Pemeriksaan mutu dan ekspor berkas');
+
+    const pptxPanelTitle = document.querySelector('#tab-pptx .panel:nth-child(2) .panel-title');
+    const pptxPanelSub = document.querySelector('#tab-pptx .panel:nth-child(2) .panel-subtitle');
+    if (pptxPanelTitle) pptxPanelTitle.textContent = isEn ? 'Standard Slide Composition' : 'Struktur Salindia Standar';
+    if (pptxPanelSub) pptxPanelSub.textContent = isEn ? 'Automated structure tailored for academic defenses and seminars.' : 'Komposisi otomatis untuk sidang dan seminar akademik.';
+    const pptxSteps = document.querySelectorAll('#tab-pptx .pipeline-steps .step-item');
+    if (pptxSteps.length >= 4) {
+      const pptxData = isEn ? [
+        ['Cover & Background', 'Title, topic urgency, and research context'],
+        ['Problem & Literature', 'Research questions, theory, and research gaps'],
+        ['Methodology & Discussion', 'Workflow, core findings analysis, and data comparison'],
+        ['Conclusion & Speaker Notes', 'Final summary plus speaking script per slide']
+      ] : [
+        ['Sampul & Latar Belakang', 'Judul, urgensi topik, dan konteks fenomena riset'],
+        ['Rumusan & Kajian Pustaka', 'Pertanyaan penelitian, landasan teori, dan celah riset'],
+        ['Metodologi & Pembahasan', 'Alur kerja, analisis temuan utama, dan perbandingan data'],
+        ['Simpulan & Catatan Pemateri', 'Ringkasan akhir beserta naskah bicara di setiap slide']
+      ];
+      pptxSteps.forEach((stEl, idx) => {
+        const lbl = stEl.querySelector('.step-label');
+        const dsc = stEl.querySelector('.step-desc');
+        if (lbl && pptxData[idx]) lbl.textContent = pptxData[idx][0];
+        if (dsc && pptxData[idx]) dsc.textContent = pptxData[idx][1];
+      });
+    }
+
+    const reportContent = document.getElementById('reportContent');
+    if (reportContent && reportContent.querySelector('p')) {
+      const p = reportContent.querySelector('p');
+      if (p.textContent.includes('Unggah berkas') || p.textContent.includes('Upload manuscript')) {
+        p.innerHTML = isEn
+          ? 'Upload manuscript file on the left panel then click <strong>Audit Manuscript Rigor</strong> to inspect chapter structure score, 1:1 citation compliance, and improvement recommendations.'
+          : 'Unggah berkas naskah di panel kiri lalu klik <strong>Periksa Kelayakan Naskah</strong> untuk melihat skor struktur bab, kepatuhan sitasi 1:1, dan rekomendasi perbaikan.';
+      }
+    }
+    const auditStatusPill = document.getElementById('auditStatusPill');
+    if (auditStatusPill && (auditStatusPill.textContent === 'Belum Diperiksa' || auditStatusPill.textContent === 'Not Audited')) {
+      auditStatusPill.textContent = isEn ? 'Not Audited' : 'Belum Diperiksa';
+    }
+
+    const turnitinOptsTitle = document.querySelector('.turnitin-options-box > div');
+    if (turnitinOptsTitle) turnitinOptsTitle.textContent = isEn ? 'Campus Turnitin Filters:' : 'Filter Turnitin Kampus:';
+    const chkBibSpan = document.querySelector('#chkTurnitinExcludeBib + span');
+    if (chkBibSpan) chkBibSpan.textContent = isEn ? 'Exclude Bibliography' : 'Kecualikan Daftar Pustaka (Exclude Bibliography)';
+    const chkQuotesSpan = document.querySelector('#chkTurnitinExcludeQuotes + span');
+    if (chkQuotesSpan) chkQuotesSpan.textContent = isEn ? 'Exclude Quotes' : 'Kecualikan Tanda Petik (Exclude Quotes)';
+    const tMainTitle = document.getElementById('turnitinReportMainTitle');
+    if (tMainTitle) tMainTitle.textContent = isEn ? 'Turnitin Similarity Report' : 'Laporan Kemiripan Turnitin';
+    const tDocSub = document.getElementById('turnitinDocFilename');
+    if (tDocSub && (tDocSub.textContent.includes('Analisis kemiripan') || tDocSub.textContent.includes('Similarity analysis'))) {
+      tDocSub.textContent = isEn ? 'Similarity analysis against student repositories, academic journals, and the web.' : 'Analisis kemiripan terhadap repositori mahasiswa, jurnal ilmiah, dan web.';
+    }
+    const btnTDoc = document.getElementById('btnTurnitinViewDoc');
+    if (btnTDoc) btnTDoc.textContent = isEn ? 'Document View' : 'Tampilan Dokumen';
+    const btnTTxt = document.getElementById('btnTurnitinViewText');
+    if (btnTTxt) btnTTxt.textContent = isEn ? 'Summary Report' : 'Laporan Ringkas';
+    const btnSourcesToggle = document.getElementById('btnToggleSourcesPane');
+    if (btnSourcesToggle) {
+      const isHidden = btnSourcesToggle.textContent.includes('Tampilkan') || btnSourcesToggle.textContent.includes('Show');
+      btnSourcesToggle.textContent = isHidden ? (isEn ? 'Show Sources' : 'Tampilkan Sumber') : (isEn ? 'Hide Sources' : 'Sembunyikan Sumber');
+    }
+    const btnNewScan = document.getElementById('btnTurnitinNewScan');
+    if (btnNewScan) btnNewScan.textContent = isEn ? '← Scan Another File' : '← Uji Berkas Lain';
+    const btnBackResult = document.getElementById('btnTurnitinBackToResult');
+    if (btnBackResult) btnBackResult.textContent = isEn ? 'View Last Report →' : 'Lihat Laporan Terakhir →';
+
+    const metricBoxes = document.querySelectorAll('.turnitin-metrics-quad .metric-box');
+    if (metricBoxes.length >= 4) {
+      const m0Lbl = metricBoxes[0].querySelector('.metric-box-label');
+      const m0Note = metricBoxes[0].querySelector('.metric-box-note');
+      const m1Note = metricBoxes[1].querySelector('.metric-box-note');
+      const m2Note = metricBoxes[2].querySelector('.metric-box-note');
+      const m3Note = metricBoxes[3].querySelector('.metric-box-note');
+      if (m0Lbl) m0Lbl.textContent = isEn ? 'Similarity Index' : 'Indeks Kemiripan';
+      if (m0Note && (m0Note.textContent.includes('Batas aman') || m0Note.textContent.includes('Safe threshold'))) {
+        m0Note.textContent = isEn ? 'Safe threshold < 20%' : 'Batas aman < 20%';
+      }
+      if (m1Note) m1Note.textContent = isEn ? 'Web & Encyclopedias' : 'Web & Ensiklopedia';
+      if (m2Note) m2Note.textContent = isEn ? 'Indexed Journals' : 'Jurnal SINTA/DOAJ';
+      if (m3Note) m3Note.textContent = isEn ? 'Student Papers Corpus' : 'Korpus Mahasiswa';
+    }
+    const srcChips = document.querySelectorAll('#turnitinSourceFilters .t-filter-chip');
+    if (srcChips.length >= 4) {
+      srcChips[0].textContent = isEn ? 'All' : 'Semua';
+      srcChips[1].textContent = isEn ? 'Publications' : 'Publikasi';
+      srcChips[2].textContent = isEn ? 'Student' : 'Mahasiswa';
+      srcChips[3].textContent = 'Internet';
+    }
+    const tDefaultContent = document.getElementById('turnitinReportContent');
+    if (tDefaultContent && tDefaultContent.querySelector('p')) {
+      const p = tDefaultContent.querySelector('p');
+      if (p.textContent.includes('Pilih berkas') || p.textContent.includes('Choose file')) {
+        p.innerHTML = isEn
+          ? 'Choose file or paste text on the left panel then click <strong>Scan Similarity Score</strong> to detect sections requiring paraphrase.'
+          : 'Pilih berkas atau tempel teks di panel kiri lalu klik <strong>Periksa Skor Kemiripan</strong> untuk mendeteksi bagian yang perlu diparafrase.';
+      }
+    }
+
+    const chatPrompts = document.querySelectorAll('#tab-chat .pipeline-steps .chat-prompt-btn');
+    if (chatPrompts.length >= 4) {
+      const chatData = isEn ? [
+        ['Formulate Topic & Variables', 'Get academic title options with independent and dependent variables'],
+        ['Formulate Research Questions', 'Measurable research questions for Chapter I'],
+        ['Choose Methodology Design', 'Quantitative, qualitative, or R&D approaches'],
+        ['Identify Research Novelty', 'Map research novelty against prior 5-year studies']
+      ] : [
+        ['Rumuskan Ide Judul & Variabel', 'Dapatkan opsi judul ilmiah beserta variabel X dan Y'],
+        ['Susun Rumusan Masalah', 'Pertanyaan penelitian terukur untuk Bab I'],
+        ['Pilih Desain Metodologi', 'Pendekatan kuantitatif, kualitatif, atau R&D'],
+        ['Identifikasi Celah Riset (Novelty)', 'Memetakan pembeda penelitian dengan studi terdahulu']
+      ];
+      chatPrompts.forEach((btn, idx) => {
+        const lbl = btn.querySelector('.step-label');
+        const dsc = btn.querySelector('.step-desc');
+        if (lbl && chatData[idx]) lbl.textContent = chatData[idx][0];
+        if (dsc && chatData[idx]) dsc.textContent = chatData[idx][1];
+      });
+    }
+
+    const authSub = document.getElementById('authModalSubtitle');
+    if (authSub) {
+      authSub.innerHTML = isEn
+        ? 'Enter your active email address. We will send a 6-digit one-time verification code (OTP) from <strong>noreply@tgsdork.com</strong>.'
+        : 'Masukkan alamat email aktif Anda. Kami akan mengirimkan 6 digit kode verifikasi sekali pakai (OTP) dari <strong>noreply@tgsdork.com</strong>.';
+    }
+
     if (typeof cachedTasks !== 'undefined' && Array.isArray(cachedTasks)) {
       renderOverviewDashboard(cachedTasks);
+      filterDocs();
+    } else {
+      updateUnifiedRealtimeStatus();
     }
   }
 
@@ -1689,7 +1879,7 @@
     }
 
     const resCount = document.getElementById('archiveResultCount');
-    if (resCount) resCount.textContent = filtered.length + ' dokumen';
+    if (resCount) resCount.textContent = filtered.length + (getStudioLanguage() === 'en' ? ' documents' : ' dokumen');
 
     renderTaskList(filtered);
   }
@@ -1707,41 +1897,34 @@
 
     const container = document.getElementById('workspaceList');
     if (!container) return;
+    const isEn = getStudioLanguage() === 'en';
     if (!Array.isArray(tasks) || tasks.length === 0) {
       container.innerHTML =
         '<div class="empty-state">' +
-        '<strong>Belum ada dokumen yang cocok dengan tampilan ini.</strong>' +
-        '<p style="margin-top:6px;font-size:13px;">Mulai susun makalah, skripsi, atau tinjauan pustaka baru untuk melihatnya di arsip.</p>' +
+        '<strong>' + (isEn ? 'No documents match this view.' : 'Belum ada dokumen yang cocok dengan tampilan ini.') + '</strong>' +
+        '<p style="margin-top:6px;font-size:13px;">' + (isEn ? 'Start drafting a paper, thesis, or literature review to see it in archive.' : 'Mulai susun makalah, skripsi, atau tinjauan pustaka baru untuk melihatnya di arsip.') + '</p>' +
         '</div>';
       return;
     }
 
     const token = getAuthToken() || '';
     const qs = token ? '?token=' + encodeURIComponent(token) : '';
-    const stepLabels = {
-      init: 'Inisialisasi',
-      dorking: 'Menyusun kueri',
-      searching: 'Mencari jurnal',
-      extracting: 'Verifikasi data',
-      drafting: 'Menyusun bab',
-      audit: 'Audit mutu',
-      exporting: 'Mengekspor',
-    };
+    const stepLabels = isEn ? STEP_LABELS_EN : STEP_LABELS;
 
     const rowsHtml = tasks
       .map((t) => {
         const isDone = t.step === 'completed';
         const isRunning = isTaskActivelyRunning(t);
-        const dateStr = t.updatedAt ? new Date(t.updatedAt).toLocaleDateString('id-ID') : '-';
+        const dateStr = t.updatedAt ? new Date(t.updatedAt).toLocaleDateString(isEn ? 'en-US' : 'id-ID') : '-';
         const srcCount = t.sources ? t.sources.length : 0;
         const secCount = t.sections ? t.sections.length : 0;
         const isRevOpen = openReviseRows.has(t.id);
 
         const statusBadge = isDone
-          ? '<span class="status-pill done">Selesai</span>'
+          ? '<span class="status-pill done">' + (isEn ? 'Completed' : 'Selesai') + '</span>'
           : isRunning
-          ? '<span class="status-pill running">' + escapeHtml(stepLabels[t.step] || t.step || 'Memproses') + '</span>'
-          : '<span class="status-pill">Draf</span>';
+          ? '<span class="status-pill running">' + escapeHtml(stepLabels[t.step] || t.step || (isEn ? 'Processing' : 'Memproses')) + '</span>'
+          : '<span class="status-pill">' + (isEn ? 'Draft' : 'Draf') + '</span>';
 
         const idAttr = escapeHtml(t.id);
         const dl = (ext) => '/api/download/' + encodeURIComponent(t.id) + '/' + ext + qs;
@@ -1749,13 +1932,13 @@
 
         const actionsHtml = isDone
           ? '<div class="actions-row nowrap">' +
-            '<button type="button" class="action-btn" data-action="read-doc" data-id="' + idAttr + '">Baca</button>' +
+            '<button type="button" class="action-btn" data-action="read-doc" data-id="' + idAttr + '">' + (isEn ? 'Read' : 'Baca') + '</button>' +
             '<a class="action-btn accent" href="' + dl('docx') + '">DOCX</a>' +
             '<a class="action-btn" href="' + dl('pdf') + '">PDF</a>' +
-            '<button type="button" class="action-btn" data-action="toggle-revise" data-id="' + idAttr + '" aria-label="Aksi lainnya">&#8943;</button>' +
+            '<button type="button" class="action-btn" data-action="toggle-revise" data-id="' + idAttr + '" aria-label="More actions">&#8943;</button>' +
             '</div>'
           : '<div class="actions-row nowrap">' +
-            '<button type="button" class="action-btn danger" data-action="delete" data-id="' + idAttr + '" data-topic="' + escapeHtml(t.topic) + '">Hapus</button>' +
+            '<button type="button" class="action-btn danger" data-action="delete" data-id="' + idAttr + '" data-topic="' + escapeHtml(t.topic) + '">' + (isEn ? 'Delete' : 'Hapus') + '</button>' +
             '</div>';
 
         const sectionOptions = (t.sections || [])
@@ -1774,15 +1957,15 @@
             '<a class="action-btn" href="' + dl('bib') + '">BibTeX</a>' +
             '<a class="action-btn" href="' + dl('zip') + '">ZIP</a>' +
             '<a class="action-btn" href="' + view('md') + '" target="_blank">Markdown</a>' +
-            '<a class="action-btn" href="' + view('review') + '" target="_blank">Hasil Audit</a>' +
-            '<button type="button" class="action-btn success" data-action="autorevise" data-id="' + idAttr + '">Revisi Otomatis</button>' +
-            '<button type="button" class="action-btn danger" data-action="delete" data-id="' + idAttr + '" data-topic="' + escapeHtml(t.topic) + '">Hapus</button>' +
+            '<a class="action-btn" href="' + view('review') + '" target="_blank">' + (isEn ? 'Audit Report' : 'Hasil Audit') + '</a>' +
+            '<button type="button" class="action-btn success" data-action="autorevise" data-id="' + idAttr + '">' + (isEn ? 'Auto Revise' : 'Revisi Otomatis') + '</button>' +
+            '<button type="button" class="action-btn danger" data-action="delete" data-id="' + idAttr + '" data-topic="' + escapeHtml(t.topic) + '">' + (isEn ? 'Delete' : 'Hapus') + '</button>' +
             '</div>' +
             (secCount > 0
               ? '<div class="revise-chapter-bar">' +
-                '<select id="revSec-' + idAttr + '" aria-label="Pilih bab">' + sectionOptions + '</select>' +
-                '<input type="text" id="revInst-' + idAttr + '" placeholder="Catatan perbaikan bab (opsional)" />' +
-                '<button type="button" class="action-btn accent" id="btnRevSec-' + idAttr + '" data-action="revise-sec" data-id="' + idAttr + '">Tulis Ulang Bab</button>' +
+                '<select id="revSec-' + idAttr + '" aria-label="Select section">' + sectionOptions + '</select>' +
+                '<input type="text" id="revInst-' + idAttr + '" placeholder="' + (isEn ? 'Section revision notes (optional)' : 'Catatan perbaikan bab (opsional)') + '" />' +
+                '<button type="button" class="action-btn accent" id="btnRevSec-' + idAttr + '" data-action="revise-sec" data-id="' + idAttr + '">' + (isEn ? 'Rewrite Chapter' : 'Tulis Ulang Bab') + '</button>' +
                 '</div>'
               : '') +
             '</div>' +
@@ -1792,9 +1975,9 @@
 
         return (
           '<tr>' +
-          '<td class="doc-title-cell"><strong>' + escapeHtml(t.topic) + '</strong><span>' + secCount + ' bagian tersusun</span></td>' +
+          '<td class="doc-title-cell"><strong>' + escapeHtml(t.topic) + '</strong><span>' + secCount + (isEn ? ' sections drafted' : ' bagian tersusun') + '</span></td>' +
           '<td><span class="tag">' + escapeHtml(t.taskType || 'makalah') + '</span></td>' +
-          '<td>' + srcCount + ' rujukan</td>' +
+          '<td>' + srcCount + (isEn ? ' sources' : ' rujukan') + '</td>' +
           '<td>' + escapeHtml(dateStr) + '</td>' +
           '<td>' + statusBadge + '</td>' +
           '<td class="actions-cell">' + actionsHtml + '</td>' +
@@ -1809,12 +1992,12 @@
       '<table class="bento-table">' +
       '<thead>' +
       '<tr>' +
-      '<th>JUDUL NASKAH</th>' +
-      '<th>JENIS</th>' +
-      '<th>RUJUKAN</th>' +
-      '<th>TANGGAL</th>' +
+      '<th>' + (isEn ? 'MANUSCRIPT TITLE' : 'JUDUL NASKAH') + '</th>' +
+      '<th>' + (isEn ? 'TYPE' : 'JENIS') + '</th>' +
+      '<th>' + (isEn ? 'SOURCES' : 'RUJUKAN') + '</th>' +
+      '<th>' + (isEn ? 'DATE' : 'TANGGAL') + '</th>' +
       '<th>STATUS</th>' +
-      '<th style="text-align:right;">AKSI</th>' +
+      '<th style="text-align:right;">' + (isEn ? 'ACTIONS' : 'AKSI') + '</th>' +
       '</tr>' +
       '</thead>' +
       '<tbody>' + rowsHtml + '</tbody>' +
