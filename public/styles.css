@@ -511,6 +511,38 @@ html, body {
   gap: 8px;
 }
 
+.studio-lang-switch {
+  display: inline-flex;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.studio-lang-btn {
+  border: none;
+  background: transparent;
+  color: var(--ink-muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.studio-lang-btn:hover {
+  color: #ffffff;
+}
+
+.studio-lang-btn.active {
+  background: #ffffff;
+  color: #06070a;
+}
+
 .icon-btn {
   width: 36px;
   height: 36px;

@@ -37,7 +37,7 @@ export function renderLandingHtml(devUiMode = false): string {
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/public/styles.css?v=20261112_01" />
+  <link rel="stylesheet" href="/public/styles.css?v=20261112_02" />
   <link rel="stylesheet" href="/public/landing.css?v=20261112_01" />
 </head>
 <body class="landing-body">

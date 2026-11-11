@@ -17,7 +17,7 @@ export function renderStudioHtml(devUiMode = false): string {
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/public/styles.css?v=20261112_01" />
+  <link rel="stylesheet" href="/public/styles.css?v=20261112_02" />
 </head>
 <body class="studio-body">
   <a href="#mainApp" class="skip-link">Lewati ke ruang kerja utama</a>
@@ -53,38 +53,38 @@ export function renderStudioHtml(devUiMode = false): string {
           <nav class="nav" id="mainNav">
             <button type="button" class="nav-btn active" data-tab="overview" aria-current="page" title="Ringkasan" onclick="TGSDORK.switchNav('overview')">
               <svg fill="none" stroke="currentColor" stroke-width="1.85" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 7.5v4.5l3 2.5"/></svg>
-              <span class="nav-label">Ringkasan</span>
+              <span class="nav-label" data-i18n="nav_overview">Ringkasan</span>
             </button>
 
             <button type="button" class="nav-btn" data-tab="workspace" aria-current="false" title="Arsip Dokumen" onclick="TGSDORK.switchNav('workspace')">
               <svg fill="none" stroke="currentColor" stroke-width="1.85" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="16" rx="2.5"/><path stroke-linecap="round" d="M9 9h6M9 13h6M9 17h4"/></svg>
-              <span class="nav-label">Arsip</span>
+              <span class="nav-label" data-i18n="nav_archive">Arsip</span>
               <span class="nav-count" id="navWorkspaceCount">0</span>
             </button>
 
             <button type="button" class="nav-btn" data-tab="generate" aria-current="false" title="Susun Naskah" onclick="TGSDORK.switchNav('generate')">
               <svg fill="none" stroke="currentColor" stroke-width="1.85" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><path stroke-linecap="round" d="M16.75 13.5v6.5m-3.25-3.25h6.5"/></svg>
-              <span class="nav-label">Susun Naskah</span>
+              <span class="nav-label" data-i18n="nav_generate">Susun Naskah</span>
             </button>
 
             <button type="button" class="nav-btn" data-tab="review" aria-current="false" title="Audit & Revisi" onclick="TGSDORK.switchNav('review')">
               <svg fill="none" stroke="currentColor" stroke-width="1.85" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-              <span class="nav-label">Audit &amp; Revisi</span>
+              <span class="nav-label" data-i18n="nav_review">Audit &amp; Revisi</span>
             </button>
 
             <button type="button" class="nav-btn" data-tab="turnitin" aria-current="false" title="Uji Kemiripan" onclick="TGSDORK.switchNav('turnitin')">
               <svg fill="none" stroke="currentColor" stroke-width="1.85" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-              <span class="nav-label">Kemiripan</span>
+              <span class="nav-label" data-i18n="nav_turnitin">Kemiripan</span>
             </button>
 
             <button type="button" class="nav-btn" data-tab="pptx" aria-current="false" title="PowerPoint" onclick="TGSDORK.switchNav('pptx')">
               <svg fill="none" stroke="currentColor" stroke-width="1.85" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="M8 20h8m-4-4v4"/></svg>
-              <span class="nav-label">PowerPoint</span>
+              <span class="nav-label" data-i18n="nav_pptx">PowerPoint</span>
             </button>
 
             <button type="button" class="nav-btn" data-tab="chat" aria-current="false" title="Diskusi Topik" onclick="TGSDORK.switchNav('chat')">
               <svg fill="none" stroke="currentColor" stroke-width="1.85" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h8M8 14h5m-8 6l3.5-3H19a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v9a2 2 0 002 2v3z"/></svg>
-              <span class="nav-label">Diskusi</span>
+              <span class="nav-label" data-i18n="nav_chat">Diskusi</span>
             </button>
           </nav>
         </div>
@@ -95,13 +95,13 @@ export function renderStudioHtml(devUiMode = false): string {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" />
             </svg>
-            <span class="nav-label">Kontak</span>
+            <span class="nav-label" data-i18n="nav_contact">Kontak</span>
           </button>
           <button type="button" class="rail-exit-btn" title="Logout dari Studio" aria-label="Logout dari Studio" onclick="TGSDORK.logout()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" d="M15 4h4a2 2 0 012 2v12a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3" />
             </svg>
-            <span class="nav-label">Logout</span>
+            <span class="nav-label" data-i18n="nav_logout">Logout</span>
             <span class="status-dot" id="wsDot" title="Status Server"></span>
           </button>
         </div>
@@ -120,12 +120,16 @@ export function renderStudioHtml(devUiMode = false): string {
               <span class="user-avatar-orb" id="userAvatarInitials" aria-hidden="true">TG</span>
               <span class="user-chip-email" id="userEmailLabel">Akun</span>
             </div>
+            <div class="studio-lang-switch" role="group" aria-label="Pengalih Bahasa">
+              <button type="button" class="studio-lang-btn" data-lang-switch="en" onclick="TGSDORK.setLanguage('en')">EN</button>
+              <button type="button" class="studio-lang-btn active" data-lang-switch="id" onclick="TGSDORK.setLanguage('id')">ID</button>
+            </div>
             <button type="button" class="btn-pill btn-white sm" id="headerContactBtn" onclick="TGSDORK.openContactModal()" title="Kontak &amp; Bantuan">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
-              <span>Kontak</span>
+              <span data-i18n="top_contact">Kontak</span>
             </button>
             <button type="button" class="btn-pill btn-white sm" id="headerNewDocBtn" onclick="TGSDORK.switchNav('generate'); document.getElementById('topic')?.focus();">
-              <span>+ Naskah Baru</span>
+              <span data-i18n="top_new_doc">+ Naskah Baru</span>
             </button>
           </div>
         </header>
@@ -142,41 +146,40 @@ export function renderStudioHtml(devUiMode = false): string {
           <section id="tab-overview">
             <div class="ov-stats-grid">
               <article class="bento-card card-white">
-                <span class="card-label">Total Dokumen</span>
+                <span class="card-label" data-i18n="ov_total_docs">Total Dokumen</span>
                 <div class="card-stat">
                   <strong id="ovTotalDocs">0</strong>
                   <span class="mini-pill sky" id="ovCompletedRate">0 selesai</span>
                 </div>
-                <span class="card-foot">Tersimpan di arsip akun</span>
+                <span class="card-foot" data-i18n="ov_saved_archive">Tersimpan di arsip akun</span>
               </article>
 
               <article class="bento-card">
-                <span class="card-label">Rujukan Terkunci</span>
+                <span class="card-label" data-i18n="ov_locked_ref">Rujukan Terkunci</span>
                 <div class="card-stat">
                   <strong id="ovTotalSources">0</strong>
-                  <span class="mini-pill pink">Terverifikasi</span>
+                  <span class="mini-pill pink" data-i18n="ov_verified">Terverifikasi</span>
                 </div>
-                <span class="card-foot">Total sitasi literatur</span>
+                <span class="card-foot" data-i18n="ov_citation_total">Total sitasi literatur</span>
               </article>
 
               <article class="bento-card">
-                <span class="card-label">Bab Tersusun</span>
+                <span class="card-label" data-i18n="ov_drafted_sections">Bab Tersusun</span>
                 <div class="card-stat">
                   <strong id="ovTotalSections">0</strong>
-                  <span class="mini-pill sky">Bagian</span>
+                  <span class="mini-pill sky" data-i18n="ov_sections_badge">Bagian</span>
                 </div>
-                <span class="card-foot">Abstrak hingga penutup</span>
+                <span class="card-foot" data-i18n="ov_abstract_to_close">Abstrak hingga penutup</span>
               </article>
 
               <article class="bento-card">
-                <span class="card-label">Proses Aktif Real-Time</span>
+                <span class="card-label" data-i18n="ov_active_jobs">Proses Aktif Real-Time</span>
                 <div class="card-stat">
                   <strong id="ovRunningCount">0</strong>
-                  <span class="mini-pill sky" id="ovRunningPill">Tenang</span>
+                  <span class="mini-pill sky" id="ovRunningPill" data-i18n="ov_calm">Tenang</span>
                 </div>
-                <span class="card-foot" id="ovRunningNote">Semua proses jalan paralel tanpa antrean</span>
+                <span class="card-foot" id="ovRunningNote" data-i18n="ov_jobs_note">Semua proses jalan paralel tanpa antrean</span>
               </article>
-            </div>
 
             <div class="panel ov-live-jobs-panel" id="ovLiveJobsPanel" style="display: none; margin-bottom: 16px;">
               <div class="panel-header" style="margin-bottom: 10px;">
@@ -196,9 +199,8 @@ export function renderStudioHtml(devUiMode = false): string {
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/></svg>
                 </span>
                 <div class="ov-quick-text">
-                  <strong>Susun Naskah</strong>
-                  <span>Makalah, Skripsi &amp; Tinjauan Pustaka</span>
-                </div>
+                  <strong data-i18n="quick_gen_title">Susun Naskah</strong>
+                  <span data-i18n="quick_gen_sub">Makalah, Skripsi &amp; Tinjauan Pustaka</span>
               </button>
 
               <button type="button" class="ov-quick-card" onclick="TGSDORK.switchNav('review')">
@@ -206,9 +208,8 @@ export function renderStudioHtml(devUiMode = false): string {
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </span>
                 <div class="ov-quick-text">
-                  <strong>Audit &amp; Revisi</strong>
-                  <span>Evaluasi mutu &amp; perbaikan otomatis</span>
-                </div>
+                  <strong data-i18n="quick_rev_title">Audit &amp; Revisi</strong>
+                  <span data-i18n="quick_rev_sub">Evaluasi mutu &amp; perbaikan otomatis</span>
               </button>
 
               <button type="button" class="ov-quick-card" onclick="TGSDORK.switchNav('turnitin')">
@@ -216,9 +217,8 @@ export function renderStudioHtml(devUiMode = false): string {
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 </span>
                 <div class="ov-quick-text">
-                  <strong>Uji Kemiripan</strong>
-                  <span>Cek skor kemiripan &amp; parafrase</span>
-                </div>
+                  <strong data-i18n="quick_turnitin_title">Uji Kemiripan</strong>
+                  <span data-i18n="quick_turnitin_sub">Cek skor kemiripan &amp; parafrase</span>
               </button>
 
               <button type="button" class="ov-quick-card" onclick="TGSDORK.switchNav('pptx')">
@@ -226,19 +226,18 @@ export function renderStudioHtml(devUiMode = false): string {
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="12" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="M8 20h8m-4-4v4"/></svg>
                 </span>
                 <div class="ov-quick-text">
-                  <strong>PowerPoint</strong>
-                  <span>Buat salindia &amp; catatan pemateri</span>
-                </div>
+                  <strong data-i18n="quick_pptx_title">PowerPoint</strong>
+                  <span data-i18n="quick_pptx_sub">Buat salindia &amp; catatan pemateri</span>
               </button>
             </div>
 
             <div class="panel ov-recent-panel">
               <div class="panel-header" style="margin-bottom: 12px;">
                 <div>
-                  <div class="panel-title">Dokumen Terbaru</div>
-                  <div class="panel-subtitle">Naskah terakhir yang disusun di akun ini.</div>
+                  <div class="panel-title" data-i18n="ov_recent_title">Dokumen Terbaru</div>
+                  <div class="panel-subtitle" data-i18n="ov_recent_sub">Naskah terakhir yang disusun di akun ini.</div>
                 </div>
-                <button type="button" class="action-btn" onclick="TGSDORK.switchNav('workspace')">Lihat Semua &rarr;</button>
+                <button type="button" class="action-btn" data-i18n="ov_view_all" onclick="TGSDORK.switchNav('workspace')">Lihat Semua &rarr;</button>
               </div>
               <div id="ovRecentList"></div>
             </div>
@@ -250,8 +249,8 @@ export function renderStudioHtml(devUiMode = false): string {
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
                   </div>
                   <div>
-                    <strong class="ov-contact-title">Hubungi Tim TGSDORK</strong>
-                    <span class="ov-contact-sub">Masukan fitur, kendala riset, atau kolaborasi langsung.</span>
+                    <strong class="ov-contact-title" data-i18n="ov_contact_title">Hubungi Tim TGSDORK</strong>
+                    <span class="ov-contact-sub" data-i18n="ov_contact_sub">Masukan fitur, kendala riset, atau kolaborasi langsung.</span>
                   </div>
                 </div>
                 <div class="ov-contact-actions">
@@ -274,20 +273,20 @@ export function renderStudioHtml(devUiMode = false): string {
               <div class="panel">
                 <div class="panel-header">
                   <div>
-                    <div class="panel-title">Konfigurasi Naskah</div>
-                    <div class="panel-subtitle">Susun makalah, skripsi, atau tinjauan pustaka lengkap.</div>
+                    <div class="panel-title" data-i18n="gen_panel_title">Konfigurasi Naskah</div>
+                    <div class="panel-subtitle" data-i18n="gen_panel_sub">Susun makalah, skripsi, atau tinjauan pustaka lengkap.</div>
                   </div>
                 </div>
 
                 <form id="generateForm">
                   <div class="form-group">
-                    <label for="topic">Judul atau Topik Penelitian</label>
-                    <input type="text" id="topic" placeholder="Contoh: Efektivitas Pembelajaran Berbasis Proyek terhadap Kreativitas Siswa" required />
+                    <label for="topic" data-i18n="gen_topic_label">Judul atau Topik Penelitian</label>
+                    <input type="text" id="topic" data-i18n-placeholder="gen_topic_placeholder" placeholder="Contoh: Efektivitas Pembelajaran Berbasis Proyek terhadap Kreativitas Siswa" required />
                   </div>
 
                   <div class="form-row-2">
                     <div class="form-group">
-                      <label for="taskType">Jenis Dokumen</label>
+                      <label for="taskType" data-i18n="gen_type_label">Jenis Dokumen</label>
                       <select id="taskType" onchange="TGSDORK.updateChapterOptions()">
                         <option value="makalah">Makalah Ilmiah</option>
                         <option value="skripsi">Skripsi / Tesis</option>
@@ -296,7 +295,7 @@ export function renderStudioHtml(devUiMode = false): string {
                       </select>
                     </div>
                     <div class="form-group">
-                      <label for="docFont">Tipografi (.docx &amp; .pdf)</label>
+                      <label for="docFont" data-i18n="gen_font_label">Tipografi (.docx &amp; .pdf)</label>
                       <select id="docFont">
                         <option value="Times New Roman" selected>Times New Roman</option>
                         <option value="Arial">Arial</option>
@@ -309,7 +308,7 @@ export function renderStudioHtml(devUiMode = false): string {
 
                   <div class="form-row-2">
                     <div class="form-group">
-                      <label for="citationStyle">Format Sitasi</label>
+                      <label for="citationStyle" data-i18n="gen_citation_label">Format Sitasi</label>
                       <select id="citationStyle">
                         <option value="apa" selected>APA Edisi ke-7</option>
                         <option value="ieee">IEEE [1], [2]</option>
@@ -317,7 +316,7 @@ export function renderStudioHtml(devUiMode = false): string {
                       </select>
                     </div>
                     <div class="form-group">
-                      <label for="chapterConfig">Struktur Bab</label>
+                      <label for="chapterConfig" data-i18n="gen_structure_label">Struktur Bab</label>
                       <select id="chapterConfig" onchange="TGSDORK.handleChapterConfigChange()">
                         <option value="auto" selected>Standar Lengkap (Bab I–V)</option>
                         <option value="4">4 Bab + Abstrak</option>
@@ -335,7 +334,7 @@ export function renderStudioHtml(devUiMode = false): string {
 
                   <div class="form-row-2">
                     <div class="form-group">
-                      <label for="coverToggle">Halaman Sampul</label>
+                      <label for="coverToggle" data-i18n="gen_cover_label">Halaman Sampul</label>
                       <select id="coverToggle" onchange="TGSDORK.toggleCoverFields()">
                         <option value="off" selected>Tanpa sampul</option>
                         <option value="on">Sampul institusi</option>
@@ -384,14 +383,14 @@ export function renderStudioHtml(devUiMode = false): string {
                     </div>
                   </div>
 
-                  <button type="submit" id="btnGen" class="btn-primary">Susun Naskah</button>
+                  <button type="submit" id="btnGen" class="btn-primary" data-i18n="gen_submit_btn">Susun Naskah</button>
                 </form>
               </div>
 
               <div class="studio-right-stack">
                 <div class="panel">
                   <div class="panel-header">
-                    <div class="panel-title">Tahapan Penyusunan</div>
+                    <div class="panel-title" data-i18n="gen_steps_title">Tahapan Penyusunan</div>
                   </div>
 
                   <div class="pipeline-steps">
@@ -422,17 +421,17 @@ export function renderStudioHtml(devUiMode = false): string {
               <div class="panel">
                 <div class="panel-header">
                   <div>
-                    <div class="panel-title">PowerPoint (.pptx)</div>
-                    <div class="panel-subtitle">Susun 10–14 salindia lengkap dengan catatan pembicara langsung dari judul.</div>
+                    <div class="panel-title" data-i18n="pptx_panel_title">PowerPoint (.pptx)</div>
+                    <div class="panel-subtitle" data-i18n="pptx_panel_sub">Susun 10–14 salindia lengkap dengan catatan pembicara langsung dari judul.</div>
                   </div>
                 </div>
                 <form id="pptxForm">
                   <div class="form-group">
-                    <label for="pptxTopic">Judul Materi Presentasi</label>
-                    <input type="text" id="pptxTopic" placeholder="Contoh: Arsitektur Keamanan Jaringan Berbasis Zero Trust pada Kampus" required />
+                    <label for="pptxTopic" data-i18n="pptx_topic_label">Judul Materi Presentasi</label>
+                    <input type="text" id="pptxTopic" data-i18n-placeholder="pptx_topic_placeholder" placeholder="Contoh: Arsitektur Keamanan Jaringan Berbasis Zero Trust pada Kampus" required />
                   </div>
                   <div class="form-group">
-                    <label for="pptxTheme">Tema Visual</label>
+                    <label for="pptxTheme" data-i18n="pptx_theme_label">Tema Visual</label>
                     <select id="pptxTheme">
                       <option value="auto">Otomatis sesuai topik</option>
                       <option value="canva-editorial">Editorial Cream</option>
@@ -444,13 +443,13 @@ export function renderStudioHtml(devUiMode = false): string {
                   </div>
                   <label class="checkbox-row" for="pptxAnimate">
                     <input type="checkbox" id="pptxAnimate" />
-                    <span>Tambahkan transisi antar-slide</span>
+                    <span data-i18n="pptx_transition_label">Tambahkan transisi antar-slide</span>
                   </label>
-                  <button type="submit" class="btn-primary" id="btnPptx">Buat File PowerPoint (.pptx)</button>
+                  <button type="submit" class="btn-primary" id="btnPptx" data-i18n="pptx_submit_btn">Buat File PowerPoint (.pptx)</button>
                 </form>
                 <div id="pptxStatus" class="status-callout" style="display: none;"></div>
                 <div class="actions-row" id="pptxResult" style="display: none; margin-top: 14px;">
-                  <a class="action-btn accent" id="pptxDownload" href="#" download>Unduh PowerPoint (.pptx)</a>
+                  <a class="action-btn accent" id="pptxDownload" href="#" download data-i18n="pptx_download_btn">Unduh PowerPoint (.pptx)</a>
                 </div>
               </div>
 
@@ -477,8 +476,8 @@ export function renderStudioHtml(devUiMode = false): string {
               <div class="panel">
                 <div class="panel-header">
                   <div>
-                    <div class="panel-title">Audit &amp; Revisi Otomatis</div>
-                    <div class="panel-subtitle">Evaluasi struktur dan perbaiki naskah secara otomatis.</div>
+                    <div class="panel-title" data-i18n="review_panel_title">Audit &amp; Revisi Otomatis</div>
+                    <div class="panel-subtitle" data-i18n="review_panel_sub">Evaluasi struktur dan perbaiki naskah secara otomatis.</div>
                   </div>
                 </div>
 
@@ -489,18 +488,18 @@ export function renderStudioHtml(devUiMode = false): string {
                 </div>
 
                 <div class="form-group" style="margin-top: 14px;">
-                  <label for="manualFilePath">Atau nama berkas di ~/Documents</label>
+                  <label for="manualFilePath" data-i18n="review_manual_label">Atau nama berkas di ~/Documents</label>
                   <input type="text" id="manualFilePath" placeholder="Contoh: makalah_pendidikan.docx" />
                 </div>
 
-                <button type="button" id="btnAudit" class="btn-primary" onclick="TGSDORK.executeAudit()">Periksa Kelayakan Naskah</button>
+                <button type="button" id="btnAudit" class="btn-primary" data-i18n="review_submit_btn" onclick="TGSDORK.executeAudit()">Periksa Kelayakan Naskah</button>
               </div>
 
               <div class="panel">
                 <div class="panel-header">
                   <div>
-                    <div class="panel-title">Hasil Evaluasi Kelayakan</div>
-                    <div class="panel-subtitle">Skor mutu akademik, rincian temuan, dan perbaikan otomatis.</div>
+                    <div class="panel-title" data-i18n="review_eval_title">Hasil Evaluasi Kelayakan</div>
+                    <div class="panel-subtitle" data-i18n="review_eval_sub">Skor mutu akademik, rincian temuan, dan perbaikan otomatis.</div>
                   </div>
                 </div>
 
@@ -511,8 +510,8 @@ export function renderStudioHtml(devUiMode = false): string {
                       <span class="score-status-pill" id="auditStatusPill">Belum Diperiksa</span>
                     </div>
                     <div class="actions-row">
-                      <button type="button" class="action-btn accent" id="btnDoAutoRevise" onclick="TGSDORK.triggerAuditAutoRevise()">Revisi Otomatis</button>
-                      <button type="button" class="action-btn" onclick="TGSDORK.copyReportText()">Salin</button>
+                      <button type="button" class="action-btn accent" id="btnDoAutoRevise" data-i18n="btn_do_auto_revise" onclick="TGSDORK.triggerAuditAutoRevise()">Revisi Otomatis</button>
+                      <button type="button" class="action-btn" data-i18n="btn_copy_report" onclick="TGSDORK.copyReportText()">Salin</button>
                     </div>
                   </div>
 
@@ -541,8 +540,8 @@ export function renderStudioHtml(devUiMode = false): string {
               <div class="panel turnitin-input-panel" id="turnitinInputPanel">
                 <div class="panel-header">
                   <div>
-                    <div class="panel-title">Uji Kemiripan &amp; Parafrase</div>
-                    <div class="panel-subtitle">Ukur proporsi kemiripan terhadap korpus mahasiswa, jurnal, dan web.</div>
+                    <div class="panel-title" data-i18n="turnitin_panel_title">Uji Kemiripan &amp; Parafrase</div>
+                    <div class="panel-subtitle" data-i18n="turnitin_panel_sub">Ukur proporsi kemiripan terhadap korpus mahasiswa, jurnal, dan web.</div>
                   </div>
                 </div>
 
@@ -553,7 +552,7 @@ export function renderStudioHtml(devUiMode = false): string {
                 </div>
 
                 <div class="form-group" style="margin-top: 14px;">
-                  <label for="turnitinText">Atau tempel teks naskah</label>
+                  <label for="turnitinText" data-i18n="turnitin_manual_label">Atau tempel teks naskah</label>
                   <textarea id="turnitinText" rows="5" placeholder="Tempel teks naskah..."></textarea>
                 </div>
                 <div class="turnitin-options-box">
@@ -568,7 +567,7 @@ export function renderStudioHtml(devUiMode = false): string {
                   </label>
                 </div>
 
-                <button type="button" id="btnTurnitin" class="btn-primary" onclick="TGSDORK.executeTurnitinScan()">Periksa Skor Kemiripan</button>
+                <button type="button" id="btnTurnitin" class="btn-primary" data-i18n="turnitin_submit_btn" onclick="TGSDORK.executeTurnitinScan()">Periksa Skor Kemiripan</button>
                 <button type="button" id="btnTurnitinBackToResult" class="action-btn" style="display: none; width: 100%; margin-top: 8px; justify-content: center;" onclick="TGSDORK.showLastTurnitinResult()">Lihat Laporan Terakhir &rarr;</button>
               </div>
 
@@ -587,7 +586,7 @@ export function renderStudioHtml(devUiMode = false): string {
                       <button type="button" class="turnitin-tab-btn" id="btnTurnitinViewText" onclick="TGSDORK.setTurnitinDisplayMode('text')">Laporan Ringkas</button>
                     </div>
                     <button type="button" class="action-btn" id="btnToggleSourcesPane" style="display: none;" onclick="TGSDORK.toggleTurnitinSourcesPane()">Sembunyikan Sumber</button>
-                    <button type="button" class="action-btn accent" id="btnDoTurnitinParaphrase" onclick="TGSDORK.triggerTurnitinParaphrase()">Parafrase Otomatis</button>
+                    <button type="button" class="action-btn accent" id="btnDoTurnitinParaphrase" data-i18n="turnitin_do_para_btn" onclick="TGSDORK.triggerTurnitinParaphrase()">Parafrase Otomatis</button>
                     <button type="button" class="action-btn" onclick="TGSDORK.copyTurnitinReport()">Salin</button>
                   </div>
                 </div>
@@ -673,15 +672,15 @@ export function renderStudioHtml(devUiMode = false): string {
             <div class="archive-toolbar">
               <div class="archive-search-wrap">
                 <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7.5"/><path stroke-linecap="round" d="M20 20l-4-4"/></svg>
-                <input type="text" id="searchDoc" aria-label="Cari dokumen" placeholder="Cari judul naskah..." oninput="TGSDORK.filterDocs()" />
+                <input type="text" id="searchDoc" data-i18n-placeholder="ws_search_placeholder" aria-label="Cari dokumen" placeholder="Cari judul naskah..." oninput="TGSDORK.filterDocs()" />
               </div>
 
               <div class="archive-filter-bar" role="group" aria-label="Filter jenis">
-                <button type="button" class="filter-chip active" data-type-filter="all" onclick="TGSDORK.setArchiveTypeFilter('all')">Semua</button>
-                <button type="button" class="filter-chip" data-type-filter="makalah" onclick="TGSDORK.setArchiveTypeFilter('makalah')">Makalah</button>
-                <button type="button" class="filter-chip" data-type-filter="skripsi" onclick="TGSDORK.setArchiveTypeFilter('skripsi')">Skripsi</button>
-                <button type="button" class="filter-chip" data-type-filter="lit-review" onclick="TGSDORK.setArchiveTypeFilter('lit-review')">Lit-Review</button>
-                <button type="button" class="filter-chip" data-type-filter="presentasi" onclick="TGSDORK.setArchiveTypeFilter('presentasi')">Presentasi</button>
+                <button type="button" class="filter-chip active" data-type-filter="all" data-i18n="ws_filter_all" onclick="TGSDORK.setArchiveTypeFilter('all')">Semua</button>
+                <button type="button" class="filter-chip" data-type-filter="makalah" data-i18n="ws_filter_makalah" onclick="TGSDORK.setArchiveTypeFilter('makalah')">Makalah</button>
+                <button type="button" class="filter-chip" data-type-filter="skripsi" data-i18n="ws_filter_skripsi" onclick="TGSDORK.setArchiveTypeFilter('skripsi')">Skripsi</button>
+                <button type="button" class="filter-chip" data-type-filter="lit-review" data-i18n="ws_filter_lit" onclick="TGSDORK.setArchiveTypeFilter('lit-review')">Lit-Review</button>
+                <button type="button" class="filter-chip" data-type-filter="presentasi" data-i18n="ws_filter_presentasi" onclick="TGSDORK.setArchiveTypeFilter('presentasi')">Presentasi</button>
                 <button type="button" class="filter-clear-btn" id="btnClearArchiveFilters" style="display: none;" onclick="TGSDORK.resetArchiveFilters()">Reset</button>
               </div>
 
@@ -694,7 +693,7 @@ export function renderStudioHtml(devUiMode = false): string {
                   <option value="sources">Rujukan Terbanyak</option>
                   <option value="title">Judul A–Z</option>
                 </select>
-                <button type="button" class="action-btn" onclick="TGSDORK.loadWorkspaceTasks()">Muat Ulang</button>
+                <button type="button" class="action-btn" data-i18n="ws_reload_btn" onclick="TGSDORK.loadWorkspaceTasks()">Muat Ulang</button>
               </div>
             </div>
 
@@ -707,28 +706,28 @@ export function renderStudioHtml(devUiMode = false): string {
               <div class="panel">
                 <div class="panel-header">
                   <div>
-                    <div class="panel-title">Diskusi Topik &amp; Metodologi</div>
-                    <div class="panel-subtitle">Konsultasikan judul, variabel, atau kerangka bab.</div>
+                    <div class="panel-title" data-i18n="chat_panel_title">Diskusi Topik &amp; Metodologi</div>
+                    <div class="panel-subtitle" data-i18n="chat_panel_sub">Konsultasikan judul, variabel, atau kerangka bab.</div>
                   </div>
                   <div class="actions-row">
-                    <button type="button" class="action-btn" onclick="TGSDORK.chatReset()">Bersihkan</button>
-                    <button type="button" class="action-btn accent" onclick="TGSDORK.chatUseTopic()">Jadikan Judul</button>
+                    <button type="button" class="action-btn" data-i18n="chat_clear_btn" onclick="TGSDORK.chatReset()">Bersihkan</button>
+                    <button type="button" class="action-btn accent" data-i18n="chat_use_topic_btn" onclick="TGSDORK.chatUseTopic()">Jadikan Judul</button>
                   </div>
                 </div>
 
                 <div class="chat-thread" id="chatLog"></div>
 
                 <form id="chatForm" class="chat-input-bar">
-                  <textarea id="chatInput" rows="2" aria-label="Pesan diskusi" placeholder="Tulis ide topik atau pertanyaan metodologi..."></textarea>
-                  <button type="submit" id="btnChat" class="btn-primary chat-send-btn">Kirim</button>
+                  <textarea id="chatInput" data-i18n-placeholder="chat_input_placeholder" rows="2" aria-label="Pesan diskusi" placeholder="Tulis ide topik atau pertanyaan metodologi..."></textarea>
+                  <button type="submit" id="btnChat" class="btn-primary chat-send-btn" data-i18n="chat_send_btn">Kirim</button>
                 </form>
               </div>
 
               <div class="panel">
                 <div class="panel-header">
                   <div>
-                    <div class="panel-title">Mulai Cepat Konsultasi</div>
-                    <div class="panel-subtitle">Klik salah satu topik di bawah untuk memulai diskusi.</div>
+                    <div class="panel-title" data-i18n="chat_quick_title">Mulai Cepat Konsultasi</div>
+                    <div class="panel-subtitle" data-i18n="chat_quick_sub">Klik salah satu topik di bawah untuk memulai diskusi.</div>
                   </div>
                 </div>
                 <div class="pipeline-steps">
@@ -804,27 +803,27 @@ export function renderStudioHtml(devUiMode = false): string {
         <span class="auth-badge">Akses Terverifikasi</span>
       </div>
 
-      <h2 id="authModalTitle">Masuk ke TGSDORK Studio</h2>
-      <p id="authModalSubtitle">Masukkan alamat email aktif Anda. Kami akan mengirimkan 6 digit kode verifikasi sekali pakai (OTP) dari <strong><!--email_off-->noreply@tgsdork.com<!--/email_off--></strong>.</p>
+      <h2 id="authModalTitle" data-i18n="modal_auth_title">Masuk ke TGSDORK Studio</h2>
+      <p id="authModalSubtitle" data-i18n="modal_auth_sub">Masukkan alamat email aktif Anda. Kami akan mengirimkan 6 digit kode verifikasi sekali pakai (OTP) dari <strong><!--email_off-->noreply@tgsdork.com<!--/email_off--></strong>.</p>
 
       <div id="authStep1">
         <div class="form-group">
-          <label for="authEmail">Alamat Email</label>
-          <input type="email" id="authEmail" placeholder="nama@kampus.ac.id atau email pribadi" autocomplete="email" onkeydown="if(event.key==='Enter'){event.preventDefault();TGSDORK.sendAuthCode();}" required />
+          <label for="authEmail" data-i18n="modal_auth_email_label">Alamat Email</label>
+          <input type="email" id="authEmail" data-i18n-placeholder="modal_auth_email_placeholder" placeholder="nama@kampus.ac.id atau email pribadi" autocomplete="email" onkeydown="if(event.key==='Enter'){event.preventDefault();TGSDORK.sendAuthCode();}" required />
         </div>
-        <button type="button" id="btnSendCode" class="btn-primary" style="width: 100%;" onclick="TGSDORK.sendAuthCode()">Kirim Kode Verifikasi (OTP)</button>
+        <button type="button" id="btnSendCode" class="btn-primary" style="width: 100%;" data-i18n="modal_auth_send_otp" onclick="TGSDORK.sendAuthCode()">Kirim Kode Verifikasi (OTP)</button>
       </div>
 
       <div id="authStep2" style="display: none;">
         <div id="codeHint" class="otp-code-hint"></div>
         <div class="form-group">
-          <label for="authCode">6 Digit Kode Verifikasi (OTP)</label>
+          <label for="authCode" data-i18n="modal_auth_otp_label">6 Digit Kode Verifikasi (OTP)</label>
           <input type="text" id="authCode" placeholder="000000" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" class="otp-code-input" onkeydown="if(event.key==='Enter'){event.preventDefault();TGSDORK.verifyAuthCode();}" />
         </div>
-        <button type="button" id="btnVerifyCode" class="btn-primary" style="width: 100%;" onclick="TGSDORK.verifyAuthCode()">Verifikasi &amp; Masuk Studio</button>
+        <button type="button" id="btnVerifyCode" class="btn-primary" style="width: 100%;" data-i18n="modal_auth_verify_btn" onclick="TGSDORK.verifyAuthCode()">Verifikasi &amp; Masuk Studio</button>
         <div class="auth-step2-actions">
-          <button type="button" class="btn-secondary" onclick="TGSDORK.sendAuthCode()">Kirim Ulang Kode</button>
-          <button type="button" class="btn-secondary" onclick="TGSDORK.resetAuthStep()">Ganti Alamat Email</button>
+          <button type="button" class="btn-secondary" data-i18n="modal_auth_resend" onclick="TGSDORK.sendAuthCode()">Kirim Ulang Kode</button>
+          <button type="button" class="btn-secondary" data-i18n="modal_auth_change_email" onclick="TGSDORK.resetAuthStep()">Ganti Alamat Email</button>
         </div>
       </div>
     </div>
@@ -843,8 +842,8 @@ export function renderStudioHtml(devUiMode = false): string {
         </button>
       </div>
 
-      <h2 id="contactModalTitle">Kontak &amp; Bantuan</h2>
-      <p id="contactModalSubtitle">Punya pertanyaan, saran fitur, kerja sama riset, atau kendala? Hubungi langsung melalui kanal di bawah ini:</p>
+      <h2 id="contactModalTitle" data-i18n="modal_contact_title">Kontak &amp; Bantuan</h2>
+      <p id="contactModalSubtitle" data-i18n="modal_contact_sub">Punya pertanyaan, saran fitur, kerja sama riset, atau kendala? Hubungi langsung melalui kanal di bawah ini:</p>
 
       <div class="contact-modal-list">
         <div class="contact-modal-item">
@@ -853,13 +852,13 @@ export function renderStudioHtml(devUiMode = false): string {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><polyline points="3 7 12 13 21 7"/></svg>
             </div>
             <div class="contact-modal-meta">
-              <span>Email Resmi</span>
+              <span data-i18n="modal_email_label">Email Resmi</span>
               <strong>founder@tgsdork.com</strong>
             </div>
           </div>
           <div class="contact-modal-btns">
-            <button type="button" class="btn-pill btn-white sm" onclick="TGSDORK.copyFounderEmail(this)">Salin</button>
-            <a href="mailto:founder@tgsdork.com" class="btn-pill btn-hot-pink sm">Kirim</a>
+            <button type="button" class="btn-pill btn-white sm" data-i18n="modal_copy_btn" onclick="TGSDORK.copyFounderEmail(this)">Salin</button>
+            <a href="mailto:founder@tgsdork.com" class="btn-pill btn-hot-pink sm" data-i18n="modal_send_btn">Kirim</a>
           </div>
         </div>
 
@@ -873,7 +872,7 @@ export function renderStudioHtml(devUiMode = false): string {
               <strong>@nelosif_</strong>
             </div>
           </div>
-          <a href="https://instagram.com/nelosif_" target="_blank" rel="noopener noreferrer" class="btn-pill btn-hot-pink sm">Buka</a>
+          <a href="https://instagram.com/nelosif_" target="_blank" rel="noopener noreferrer" class="btn-pill btn-hot-pink sm" data-i18n="modal_open_btn">Buka</a>
         </div>
       </div>
     </div>
@@ -882,7 +881,7 @@ export function renderStudioHtml(devUiMode = false): string {
   <div id="toastStack" class="toast-stack" aria-live="polite"></div>
 
   <script>window.__TGSDORK_DEV_UI__ = ${devUiMode ? 'true' : 'false'};</script>
-  <script src="/public/app.js?v=20261112_01"></script>
+  <script src="/public/app.js?v=20261112_02"></script>
 </body>
 </html>`;
 }

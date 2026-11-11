@@ -47,36 +47,74 @@
     return email.slice(0, 2).toUpperCase();
   }
 
+  function getStudioLanguage() {
+    try {
+      const saved = localStorage.getItem('tgsdork_lang');
+      if (saved === 'en' || saved === 'id') return saved;
+    } catch (_) {}
+    return 'id';
+  }
+
   const VIEW_META = {
-    overview: {
-      get title() {
-        return 'Halo, ' + getDisplayUserName() + '!';
+    id: {
+      overview: {
+        get title() { return 'Halo, ' + getDisplayUserName() + '!'; },
+        subtitle: 'Ringkasan riset dan dokumen akademik Anda.',
       },
-      subtitle: 'Ringkasan riset dan dokumen akademik Anda.',
+      workspace: {
+        title: 'Arsip Dokumen',
+        subtitle: 'Unduh naskah atau revisi per bab.',
+      },
+      generate: {
+        title: 'Susun Naskah',
+        subtitle: 'Penelusuran pustaka dan penyusunan naskah.',
+      },
+      pptx: {
+        title: 'PowerPoint',
+        subtitle: '10–14 salindia dengan catatan pembicara.',
+      },
+      review: {
+        title: 'Audit & Revisi',
+        subtitle: 'Evaluasi struktur dan perbaikan naskah.',
+      },
+      turnitin: {
+        title: 'Uji Kemiripan',
+        subtitle: 'Ukur kemiripan dan parafrase akademis.',
+      },
+      chat: {
+        title: 'Diskusi Topik',
+        subtitle: 'Konsultasikan judul, variabel, dan kerangka bab.',
+      },
     },
-    workspace: {
-      title: 'Arsip Dokumen',
-      subtitle: 'Unduh naskah atau revisi per bab.',
-    },
-    generate: {
-      title: 'Susun Naskah',
-      subtitle: 'Penelusuran pustaka dan penyusunan naskah.',
-    },
-    pptx: {
-      title: 'PowerPoint',
-      subtitle: '10–14 salindia dengan catatan pembicara.',
-    },
-    review: {
-      title: 'Audit & Revisi',
-      subtitle: 'Evaluasi struktur dan perbaikan naskah.',
-    },
-    turnitin: {
-      title: 'Uji Kemiripan',
-      subtitle: 'Ukur kemiripan dan parafrase akademis.',
-    },
-    chat: {
-      title: 'Diskusi Topik',
-      subtitle: 'Konsultasikan judul, variabel, dan kerangka bab.',
+    en: {
+      overview: {
+        get title() { return 'Hello, ' + getDisplayUserName() + '!'; },
+        subtitle: 'Overview of your academic research and documents.',
+      },
+      workspace: {
+        title: 'Document Archive',
+        subtitle: 'Download manuscripts or revise section by section.',
+      },
+      generate: {
+        title: 'Draft Manuscript',
+        subtitle: 'Literature exploration and structured drafting.',
+      },
+      pptx: {
+        title: 'PowerPoint',
+        subtitle: '10–14 clean slides with presenter speaker notes.',
+      },
+      review: {
+        title: 'Audit & Revise',
+        subtitle: 'Structural quality audit and automated revision.',
+      },
+      turnitin: {
+        title: 'Similarity Scan',
+        subtitle: 'Measure similarity score and academic paraphrase.',
+      },
+      chat: {
+        title: 'Topic Discussion',
+        subtitle: 'Consult research questions, variables, and chapter outlines.',
+      },
     },
   };
 
@@ -288,7 +326,7 @@
     const activeBtn = document.querySelector('.nav-btn.active');
     if (activeBtn && activeBtn.getAttribute('data-tab') === 'overview') {
       const st = document.getElementById('stageTitle');
-      if (st) st.textContent = VIEW_META.overview.title;
+      if (st) st.textContent = (VIEW_META[getStudioLanguage()] || VIEW_META.id).overview.title;
     }
     return true;
   }
@@ -419,7 +457,8 @@
       b.setAttribute('aria-current', isTarget ? 'page' : 'false');
     });
 
-    const meta = VIEW_META[targetTab] || VIEW_META.overview;
+    const currentLang = getStudioLanguage();
+    const meta = (VIEW_META[currentLang] || VIEW_META.id)[targetTab] || (VIEW_META[currentLang] || VIEW_META.id).overview;
     const st = document.getElementById('stageTitle');
     const sub = document.getElementById('stageSubtitle');
     if (st) st.textContent = meta.title;
@@ -1336,14 +1375,249 @@
   }
 
   function copyFounderEmail(btn) {
+    const isEn = getStudioLanguage() === 'en';
     navigator.clipboard.writeText('founder@tgsdork.com').then(() => {
-      notifyToast('Email founder@tgsdork.com berhasil disalin.', 'success');
+      notifyToast(isEn ? 'Email founder@tgsdork.com copied!' : 'Email founder@tgsdork.com berhasil disalin.', 'success');
       if (btn) {
         const orig = btn.textContent;
-        btn.textContent = 'Tersalin!';
+        btn.textContent = isEn ? 'Copied!' : 'Tersalin!';
         setTimeout(() => { btn.textContent = orig; }, 1600);
       }
     });
+  }
+
+  const STUDIO_I18N = {
+    id: {
+      nav_overview: 'Ringkasan',
+      nav_archive: 'Arsip',
+      nav_generate: 'Susun Naskah',
+      nav_review: 'Audit & Revisi',
+      nav_turnitin: 'Kemiripan',
+      nav_pptx: 'PowerPoint',
+      nav_chat: 'Diskusi',
+      nav_contact: 'Kontak',
+      nav_logout: 'Logout',
+      top_contact: 'Kontak',
+      top_new_doc: '+ Naskah Baru',
+      ov_total_docs: 'Total Dokumen',
+      ov_saved_archive: 'Tersimpan di arsip akun',
+      ov_locked_ref: 'Rujukan Terkunci',
+      ov_verified: 'Terverifikasi',
+      ov_citation_total: 'Total sitasi literatur',
+      ov_drafted_sections: 'Bab Tersusun',
+      ov_sections_badge: 'Bagian',
+      ov_abstract_to_close: 'Abstrak hingga penutup',
+      ov_active_jobs: 'Proses Aktif Real-Time',
+      ov_calm: 'Tenang',
+      ov_jobs_note: 'Semua proses jalan paralel tanpa antrean',
+      ov_recent_title: 'Dokumen Terbaru',
+      ov_recent_sub: 'Naskah terakhir yang disusun di akun ini.',
+      ov_view_all: 'Lihat Semua →',
+      ov_contact_title: 'Hubungi Tim TGSDORK',
+      ov_contact_sub: 'Masukan fitur, kendala riset, atau kolaborasi langsung.',
+      quick_gen_title: 'Susun Naskah',
+      quick_gen_sub: 'Makalah, Skripsi & Tinjauan Pustaka',
+      quick_rev_title: 'Audit & Revisi',
+      quick_rev_sub: 'Evaluasi mutu & perbaikan otomatis',
+      quick_turnitin_title: 'Uji Kemiripan',
+      quick_turnitin_sub: 'Cek skor kemiripan & parafrase',
+      quick_pptx_title: 'PowerPoint',
+      quick_pptx_sub: 'Buat salindia & catatan pemateri',
+      gen_panel_title: 'Konfigurasi Naskah',
+      gen_panel_sub: 'Susun makalah, skripsi, atau tinjauan pustaka lengkap.',
+      gen_topic_label: 'Judul atau Topik Penelitian',
+      gen_topic_placeholder: 'Contoh: Efektivitas Pembelajaran Berbasis Proyek terhadap Kreativitas Siswa',
+      gen_type_label: 'Jenis Dokumen',
+      gen_font_label: 'Tipografi (.docx & .pdf)',
+      gen_citation_label: 'Format Sitasi',
+      gen_structure_label: 'Struktur Bab',
+      gen_cover_label: 'Halaman Sampul',
+      gen_submit_btn: 'Susun Naskah',
+      gen_steps_title: 'Tahapan Penyusunan',
+      pptx_panel_title: 'PowerPoint (.pptx)',
+      pptx_panel_sub: 'Susun 10–14 salindia lengkap dengan catatan pembicara langsung dari judul.',
+      pptx_topic_label: 'Judul Materi Presentasi',
+      pptx_topic_placeholder: 'Contoh: Arsitektur Keamanan Jaringan Berbasis Zero Trust pada Kampus',
+      pptx_theme_label: 'Tema Visual',
+      pptx_transition_label: 'Tambahkan transisi antar-slide',
+      pptx_submit_btn: 'Buat File PowerPoint (.pptx)',
+      pptx_download_btn: 'Unduh PowerPoint (.pptx)',
+      review_panel_title: 'Audit & Revisi Otomatis',
+      review_panel_sub: 'Evaluasi struktur dan perbaiki naskah secara otomatis.',
+      review_manual_label: 'Atau nama berkas di ~/Documents',
+      review_submit_btn: 'Periksa Kelayakan Naskah',
+      review_eval_title: 'Hasil Evaluasi Kelayakan',
+      review_eval_sub: 'Skor mutu akademik, rincian temuan, dan perbaikan otomatis.',
+      turnitin_panel_title: 'Uji Kemiripan & Parafrase',
+      turnitin_panel_sub: 'Ukur proporsi kemiripan terhadap korpus mahasiswa, jurnal, dan web.',
+      turnitin_manual_label: 'Atau tempel teks naskah',
+      turnitin_submit_btn: 'Periksa Skor Kemiripan',
+      ws_search_placeholder: 'Cari judul naskah...',
+      chat_panel_title: 'Diskusi Topik & Metodologi',
+      chat_panel_sub: 'Konsultasikan judul, variabel, atau kerangka bab.',
+      chat_input_placeholder: 'Tulis ide topik atau pertanyaan metodologi...',
+      chat_clear_btn: 'Bersihkan',
+      chat_use_topic_btn: 'Jadikan Judul',
+      chat_send_btn: 'Kirim',
+      modal_contact_title: 'Kontak & Bantuan',
+      modal_contact_sub: 'Punya pertanyaan, saran fitur, kerja sama riset, atau kendala? Hubungi langsung melalui kanal di bawah ini:',
+      modal_email_label: 'Email Resmi',
+      modal_copy_btn: 'Salin',
+      modal_send_btn: 'Kirim',
+      modal_open_btn: 'Buka',
+      modal_auth_title: 'Masuk ke TGSDORK Studio',
+      modal_auth_sub: 'Masukkan alamat email aktif Anda. Kami akan mengirimkan 6 digit kode verifikasi sekali pakai (OTP) dari noreply@tgsdork.com.',
+      modal_auth_email_label: 'Alamat Email',
+      modal_auth_email_placeholder: 'nama@kampus.ac.id atau email pribadi',
+      modal_auth_send_otp: 'Kirim Kode Verifikasi (OTP)',
+      modal_auth_otp_label: '6 Digit Kode Verifikasi (OTP)',
+      modal_auth_verify_btn: 'Verifikasi & Masuk Studio',
+      modal_auth_resend: 'Kirim Ulang Kode',
+      modal_auth_change_email: 'Ganti Alamat Email',
+    },
+    en: {
+      nav_overview: 'Overview',
+      nav_archive: 'Archive',
+      nav_generate: 'Draft Manuscript',
+      nav_review: 'Audit & Revise',
+      nav_turnitin: 'Similarity',
+      nav_pptx: 'PowerPoint',
+      nav_chat: 'Discussion',
+      nav_contact: 'Contact',
+      nav_logout: 'Logout',
+      top_contact: 'Contact',
+      top_new_doc: '+ New Manuscript',
+      ov_total_docs: 'Total Documents',
+      ov_saved_archive: 'Saved in account archive',
+      ov_locked_ref: 'Locked Sources',
+      ov_verified: 'Verified',
+      ov_citation_total: 'Total literature citations',
+      ov_drafted_sections: 'Chapters Drafted',
+      ov_sections_badge: 'Sections',
+      ov_abstract_to_close: 'Abstract to conclusion',
+      ov_active_jobs: 'Real-Time Active Jobs',
+      ov_calm: 'Idle',
+      ov_jobs_note: 'All processes run in parallel without queueing',
+      ov_recent_title: 'Recent Documents',
+      ov_recent_sub: 'Latest manuscripts drafted on this account.',
+      ov_view_all: 'View All →',
+      ov_contact_title: 'Contact TGSDORK Team',
+      ov_contact_sub: 'Feature feedback, research issues, or direct collaboration.',
+      quick_gen_title: 'Draft Manuscript',
+      quick_gen_sub: 'Papers, Theses & Literature Reviews',
+      quick_rev_title: 'Audit & Revise',
+      quick_rev_sub: 'Quality check & automated revision',
+      quick_turnitin_title: 'Similarity Scan',
+      quick_turnitin_sub: 'Check similarity & paraphrase',
+      quick_pptx_title: 'PowerPoint',
+      quick_pptx_sub: 'Generate slides & speaker notes',
+      gen_panel_title: 'Manuscript Configuration',
+      gen_panel_sub: 'Draft papers, theses, or comprehensive literature reviews.',
+      gen_topic_label: 'Research Topic or Title',
+      gen_topic_placeholder: 'Example: Project-Based Learning Impact on Student Critical Thinking',
+      gen_type_label: 'Document Type',
+      gen_font_label: 'Typography (.docx & .pdf)',
+      gen_citation_label: 'Citation Style',
+      gen_structure_label: 'Chapter Structure',
+      gen_cover_label: 'Cover Page',
+      gen_submit_btn: 'Draft Manuscript',
+      gen_steps_title: 'Research Execution Pipeline',
+      pptx_panel_title: 'PowerPoint (.pptx)',
+      pptx_panel_sub: 'Generate 10–14 clean slides with presenter speaker notes directly from title.',
+      pptx_topic_label: 'Presentation Topic or Title',
+      pptx_topic_placeholder: 'Example: Zero Trust Network Security Architecture in Campus Networks',
+      pptx_theme_label: 'Visual Theme',
+      pptx_transition_label: 'Add transitions between slides',
+      pptx_submit_btn: 'Generate PowerPoint (.pptx)',
+      pptx_download_btn: 'Download PowerPoint (.pptx)',
+      review_panel_title: 'Automated Audit & Revise',
+      review_panel_sub: 'Evaluate academic structure and automatically revise manuscripts.',
+      review_manual_label: 'Or file name in ~/Documents',
+      review_submit_btn: 'Audit Manuscript Rigor',
+      review_eval_title: 'Evaluation Results',
+      review_eval_sub: 'Academic quality score, findings breakdown, and automated revision.',
+      turnitin_panel_title: 'Similarity Scan & Paraphrase',
+      turnitin_panel_sub: 'Measure similarity against student papers, journals, and the web.',
+      turnitin_manual_label: 'Or paste manuscript text',
+      turnitin_submit_btn: 'Scan Similarity Score',
+      ws_search_placeholder: 'Search manuscript title...',
+      chat_panel_title: 'Topic & Methodology Discussion',
+      chat_panel_sub: 'Consult titles, variables, or chapter outlines.',
+      chat_input_placeholder: 'Write topic ideas or methodology questions...',
+      chat_clear_btn: 'Clear',
+      chat_use_topic_btn: 'Use as Title',
+      chat_send_btn: 'Send',
+      modal_contact_title: 'Contact & Support',
+      modal_contact_sub: 'Have questions, feature suggestions, research collaboration, or issues? Reach out directly:',
+      modal_email_label: 'Official Email',
+      modal_copy_btn: 'Copy',
+      modal_send_btn: 'Send',
+      modal_open_btn: 'Open',
+      modal_auth_title: 'Sign in to TGSDORK Studio',
+      modal_auth_sub: 'Enter your active email. We will send a 6-digit one-time verification code (OTP) from noreply@tgsdork.com.',
+      modal_auth_email_label: 'Email Address',
+      modal_auth_email_placeholder: 'name@university.edu or personal email',
+      modal_auth_send_otp: 'Send Verification Code (OTP)',
+      modal_auth_otp_label: '6-Digit Verification Code (OTP)',
+      modal_auth_verify_btn: 'Verify & Enter Studio',
+      modal_auth_resend: 'Resend Code',
+      modal_auth_change_email: 'Change Email Address',
+    },
+  };
+
+  function applyStudioLanguage(lang) {
+    if (lang !== 'en' && lang !== 'id') lang = 'id';
+    const dict = STUDIO_I18N[lang] || STUDIO_I18N.id;
+    document.documentElement.lang = lang;
+
+    document.querySelectorAll('.studio-lang-btn').forEach((btn) => {
+      const isCurrent = btn.getAttribute('data-lang-switch') === lang;
+      btn.classList.toggle('active', isCurrent);
+      btn.setAttribute('aria-pressed', isCurrent ? 'true' : 'false');
+    });
+
+    document.querySelectorAll('[data-i18n]').forEach((el) => {
+      const key = el.getAttribute('data-i18n');
+      if (key && dict[key]) {
+        el.textContent = dict[key];
+      }
+    });
+
+    document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
+      const key = el.getAttribute('data-i18n-placeholder');
+      if (key && dict[key]) {
+        el.setAttribute('placeholder', dict[key]);
+      }
+    });
+
+    const dropText = document.getElementById('dropText');
+    if (dropText && !dropText.dataset.hasFile) {
+      dropText.innerHTML = lang === 'en'
+        ? '<strong>Choose manuscript file</strong> or drag &amp; drop here'
+        : '<strong>Pilih berkas naskah</strong> atau seret ke sini';
+    }
+    const turnitinDrop = document.getElementById('turnitinDropText');
+    if (turnitinDrop && !turnitinDrop.dataset.hasFile) {
+      turnitinDrop.innerHTML = lang === 'en'
+        ? '<strong>Choose manuscript file</strong> or drag &amp; drop here'
+        : '<strong>Pilih berkas naskah</strong> atau seret ke sini';
+    }
+
+    const activeBtn = document.querySelector('.nav-btn.active');
+    const targetTab = activeBtn ? activeBtn.getAttribute('data-tab') : 'overview';
+    const meta = (VIEW_META[lang] || VIEW_META.id)[targetTab] || (VIEW_META[lang] || VIEW_META.id).overview;
+    const st = document.getElementById('stageTitle');
+    const sub = document.getElementById('stageSubtitle');
+    if (st) st.textContent = meta.title;
+    if (sub) sub.textContent = meta.subtitle;
+  }
+
+  function setLanguage(lang) {
+    if (lang !== 'en' && lang !== 'id') lang = 'id';
+    try {
+      localStorage.setItem('tgsdork_lang', lang);
+    } catch (_) {}
+    applyStudioLanguage(lang);
   }
 
 
@@ -1879,7 +2153,15 @@
       openContactModal,
       closeContactModal,
       copyFounderEmail,
+      setLanguage,
     };
+
+    applyStudioLanguage(getStudioLanguage());
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'tgsdork_lang' && (e.newValue === 'en' || e.newValue === 'id')) {
+        applyStudioLanguage(e.newValue);
+      }
+    });
 
     // Restore sidebar collapsed state if saved
     if (localStorage.getItem('tgsdork_rail_collapsed') === '1') {
