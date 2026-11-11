@@ -1142,6 +1142,10 @@
         noteEl.textContent = isEn ? `${runningCount} parallel processes running (${types})` : `${runningCount} proses berjalan paralel (${types})`;
       }
     }
+
+    const panel = document.getElementById('ovLiveJobsPanel');
+    const listEl = document.getElementById('ovLiveJobsList');
+    const badgeEl = document.getElementById('ovLiveJobsBadge');
     if (panel && listEl) {
       if (runningCount === 0) {
         panel.style.display = 'none';
