@@ -64,11 +64,15 @@ function matchCase(source: string, replacement: string): string {
 }
 
 export function sanitizeManuscriptText(raw: string): string {
-  let out = raw
+  let out = raw.replace(/^```(?:markdown|md)?\s*\n([\s\S]*?)\n```\s*$/i, '$1');
+  out = out
     .replace(/<!--[\s\S]*?-->/g, '')
-    .replace(/```([a-zA-Z0-9_-]*)[ \t]*\n([\s\S]*?)```/g, (full, lang: string) =>
-      lang.toLowerCase() === 'mermaid' ? full : ''
-    )
+    .replace(/```([a-zA-Z0-9_-]*)[ \t]*\n([\s\S]*?)```/g, (full, lang: string, content: string) => {
+      const l = (lang || '').toLowerCase();
+      if (l === 'mermaid') return full;
+      if (l === 'markdown' || l === 'md' || !l) return content;
+      return '';
+    })
     .replace(/^.*(?:(?:→|->)\s*skipped:|\bponytail:).*$/gim, '')
     .replace(/^[ \t]*(?:[-*]\s*)?(?:\*\*|\*|`)?(?:skipped|add when|risk|risks)\s*:.*$/gim, '');
 

@@ -6,6 +6,7 @@ import { generateText } from '../ai/client.js';
 import { sanitizeManuscriptText } from '../ai/prompts.js';
 import { exportRawDocx } from '../exporter/docx-builder.js';
 import { HUMANIZER_ID_EDITORIAL_RULES } from '../core/humanizer-id.js';
+import { splitDocumentSections } from './reviewer.js';
 import { exportMarkdownToPdf } from '../exporter/pdf-builder.js';
 import { logger } from '../core/logger.js';
 
@@ -253,7 +254,8 @@ ${flaggedList}
 export async function autoParaphraseTurnitin(
   title: string,
   originalText: string,
-  turnitinReport: string
+  turnitinReport: string,
+  onProgress?: (msg: string) => void
 ): Promise<{
   paraphrasedText: string;
   docxPath: string;
@@ -264,10 +266,46 @@ export async function autoParaphraseTurnitin(
   newReport: string;
 }> {
   logger.step('PARAPHRASE', `Melakukan rekonstruksi kalimat cerdas untuk meloloskan Turnitin...`);
+  onProgress?.('Menganalisis variasi kalimat dan pola kemiripan...');
 
   const originalMetrics = computeTurnitinMetrics(originalText);
+  let paraphrasedText = '';
 
-  const prompt = `Berikut adalah Naskah Akademik:
+  const validSections = splitDocumentSections(originalText).filter(
+    (s) => s.content && s.content.trim().length >= 100
+  );
+  if (validSections.length > 1 && originalText.length > 15000) {
+    const parts: string[] = [];
+    for (let i = 0; i < validSections.length; i++) {
+      const sec = validSections[i];
+      onProgress?.(`Memparafrase bagian [${i + 1}/${validSections.length}] ${sec.title.slice(0, 30)}...`);
+      const secPrompt = `Berikut adalah bagian naskah ilmiah:
+### ${sec.title}
+${sec.content}
+
+PERINTAH REKONSTRUKSI & PARAFRASE AKADEMIK (WAJIB LOLOS TURNITIN):
+1. Tulis ulang bagian naskah di atas secara menyeluruh dengan mempertahankan 100% fakta, data numerik, dan sitasi ilmiah.
+2. DILARANG menggunakan kata klise robotik: "merupakan salah satu", "tidak dapat dipungkiri", "memainkan peran penting", "dalam era modern", "secara fundamental".
+3. VARIASIKAN PANJANG KALIMAT SECARA EKSTREM:
+   - Tulis kalimat pembuka yang sangat ringkas (3-6 kata).
+   - Lanjutkan dengan kalimat majemuk bertingkat yang kaya data (25-35 kata).
+   - Hindari pola kalimat yang panjangnya seragam agar ritme tulisan terdengar seperti tulisan manusia asli.
+4. Ubah struktur kalimat aktif menjadi pasif atau sebaliknya secara bervariasi.
+5. Tuliskan teks hasil parafrase dalam format Markdown rapi tanpa kata pengantar atau catatan kaki.
+${HUMANIZER_ID_EDITORIAL_RULES}
+`;
+      const rawPart = await generateText({ prompt: secPrompt, role: 'writer' });
+      const cleanPart = sanitizeManuscriptText(rawPart);
+      if (/^#{1,3}\s+/i.test(cleanPart)) {
+        parts.push(cleanPart);
+      } else {
+        parts.push(`## ${sec.title}\n\n${cleanPart}`);
+      }
+    }
+    paraphrasedText = parts.join('\n\n');
+  } else {
+    onProgress?.('Menulis ulang variasi struktur kalimat & gaya bahasa...');
+    const prompt = `Berikut adalah Naskah Akademik:
 ---
 ${originalText.slice(0, 150000)}
 ---
@@ -284,11 +322,12 @@ PERINTAH REKONSTRUKSI & PARAFRASE AKADEMIK (WAJIB LOLOS TURNITIN):
 ${HUMANIZER_ID_EDITORIAL_RULES}
 `;
 
-  const rawParaphrased = await generateText({
-    prompt,
-    role: 'writer',
-  });
-  const paraphrasedText = sanitizeManuscriptText(rawParaphrased);
+    const rawParaphrased = await generateText({
+      prompt,
+      role: 'writer',
+    });
+    paraphrasedText = sanitizeManuscriptText(rawParaphrased);
+  }
 
   // Calculate new metrics mathematically
   const newMetrics = computeTurnitinMetrics(paraphrasedText);
@@ -322,17 +361,18 @@ Status: AMAN (<20%)
   const documentsDir = path.join(os.homedir(), 'Documents');
   fs.mkdirSync(documentsDir, { recursive: true });
 
+  onProgress?.('Menyusun berkas naskah Word (.docx) & Markdown...');
   const mdPath = path.join(documentsDir, `${passBaseName}.md`);
   fs.writeFileSync(mdPath, paraphrasedText, 'utf-8');
 
   const docxPath = path.join(documentsDir, `${passBaseName}.docx`);
   await exportRawDocx(passBaseName, paraphrasedText, docxPath);
 
-  // Auto-generate clean PDF
+  // Auto-generate clean PDF in background non-blocking
   const pdfPath = path.join(documentsDir, `${passBaseName}.pdf`);
-  try {
-    await exportMarkdownToPdf(passBaseName, paraphrasedText, pdfPath);
-  } catch {}
+  exportMarkdownToPdf(passBaseName, paraphrasedText, pdfPath).catch((pdfErr) => {
+    logger.warn(`Latar PDF bypass Turnitin tertunda: ${pdfErr}`);
+  });
 
   // Store in disk cache under both normalized hash AND filenames
   const diskCache = loadTurnitinDiskCache();

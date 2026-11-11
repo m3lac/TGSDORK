@@ -714,7 +714,13 @@
         },
         body: JSON.stringify(payload),
       });
-      const d = await res.json();
+      const rawText = await res.text();
+      let d;
+      try {
+        d = JSON.parse(rawText);
+      } catch {
+        throw new Error('Respons server tidak valid (HTTP ' + res.status + ').');
+      }
       if (d.error) throw new Error(d.error);
       renderTurnitinResult(d);
       notifyToast('Pemeriksaan kemiripan selesai.', 'success');
@@ -734,7 +740,7 @@
     const btn = document.getElementById('btnDoTurnitinParaphrase');
     const banner = document.getElementById('turnitinParaphraseBanner');
     btn.disabled = true;
-    btn.textContent = 'Menulis ulang struktur kalimat...';
+    btn.textContent = 'Menyiapkan rekonstruksi kalimat cerdas...';
 
     try {
       const res = await fetch('/api/turnitin/paraphrase', {
@@ -749,8 +755,39 @@
           turnitinReport: lastTurnitinState.report,
         }),
       });
-      const d = await res.json();
-      if (d.error) throw new Error(d.error);
+      const rawText = await res.text();
+      let initData;
+      try {
+        initData = JSON.parse(rawText);
+      } catch {
+        throw new Error('Respons server tidak valid (HTTP ' + res.status + '). Silakan coba lagi.');
+      }
+      if (initData.error) throw new Error(initData.error);
+
+      let d = initData;
+      if (initData.jobId) {
+        const jobId = initData.jobId;
+        d = await new Promise((resolve, reject) => {
+          const timer = setInterval(async () => {
+            try {
+              const sRes = await fetch('/api/turnitin/paraphrase/status?jobId=' + encodeURIComponent(jobId), {
+                headers: { Authorization: 'Bearer ' + getAuthToken() },
+              });
+              const sText = await sRes.text();
+              const sData = JSON.parse(sText);
+              if (sData.status === 'completed') {
+                clearInterval(timer);
+                resolve(sData.result);
+              } else if (sData.status === 'error') {
+                clearInterval(timer);
+                reject(new Error(sData.error || 'Parafrase otomatis gagal'));
+              } else if (sData.progress) {
+                btn.textContent = sData.progress;
+              }
+            } catch {}
+          }, 2500);
+        });
+      }
 
       document.getElementById('dlTurnitinDocx').href = d.docxUrl;
       document.getElementById('dlTurnitinPdf').href = d.pdfUrl;

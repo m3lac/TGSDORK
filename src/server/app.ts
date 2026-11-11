@@ -217,6 +217,24 @@ export function startServer(port = 3456): void {
     updatedAt: number;
   }>();
 
+  const turnitinParaphraseJobs = new Map<string, {
+    status: 'running' | 'completed' | 'error';
+    progress: string;
+    result?: {
+      fileName: string;
+      newSimilarityScore: number;
+      newAiScore: number;
+      newReport: string;
+      docxUrl: string;
+      pdfUrl: string;
+      mdUrl: string;
+    };
+    error?: string;
+    owner: string;
+    createdAt: number;
+    updatedAt: number;
+  }>();
+
   function broadcastWs(data: unknown, targetOwner?: string): void {
     const raw = JSON.stringify(data);
     const targetLower = targetOwner ? targetOwner.toLowerCase() : null;
@@ -969,20 +987,38 @@ export function startServer(port = 3456): void {
       return;
     }
 
-    // POST /api/turnitin/paraphrase
+    // POST /api/turnitin/paraphrase (Async job to prevent Cloudflare 524 / 504 timeout)
     if (url.pathname === '/api/turnitin/paraphrase' && req.method === 'POST') {
       let body = '';
       req.on('data', (chunk) => (body += chunk));
       req.on('end', async () => {
-        const jobOwner = getUserEmail(req, url) || (isLocalDevUiRequest(req) ? 'dev@local' : 'anonymous');
-        const paraJobId = 'tpara_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
-        let jobRegistered = false;
         try {
           const parsed = JSON.parse(body) as {
             filename: string;
             text: string;
             turnitinReport: string;
           };
+          if (!parsed.text || !parsed.text.trim()) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Teks naskah kosong atau tidak dapat dibaca.' }));
+            return;
+          }
+          const paraJobId = 'tpara_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+          const now = Date.now();
+          const jobOwner = getUserEmail(req, url) || (isLocalDevUiRequest(req) ? 'dev@local' : 'anonymous');
+
+          for (const [id, j] of turnitinParaphraseJobs.entries()) {
+            if (now - j.updatedAt > 3600000) turnitinParaphraseJobs.delete(id);
+          }
+
+          turnitinParaphraseJobs.set(paraJobId, {
+            status: 'running',
+            progress: 'Menyiapkan rekonstruksi kalimat cerdas...',
+            owner: jobOwner,
+            createdAt: now,
+            updatedAt: now,
+          });
+
           registerJob({
             id: paraJobId,
             type: 'uji_kemiripan',
@@ -992,45 +1028,76 @@ export function startServer(port = 3456): void {
             detail: 'Menulis ulang pola kalimat agar lolos Turnitin...',
             owner: jobOwner,
           });
-          jobRegistered = true;
-
-          const result = await autoParaphraseTurnitin(
-            parsed.filename || 'Naskah_Turnitin',
-            parsed.text,
-            parsed.turnitinReport
-          );
-
-          try {
-            const passName = result.fileName.endsWith('_turnitin_pass')
-              ? result.fileName
-              : `${result.fileName}_turnitin_pass`;
-            const pdfOut = path.join(os.homedir(), 'Documents', `${passName}.pdf`);
-            if (!fs.existsSync(pdfOut)) {
-              await exportMarkdownToPdf(passName, result.paraphrasedText, pdfOut);
-            }
-          } catch {}
-
-          finishJob(paraJobId, `Parafrase selesai: kemiripan turun ke ${result.newSimilarityScore}%.`, `/api/download-turnitin/${encodeURIComponent(result.fileName)}/docx`);
 
           res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(
-            JSON.stringify({
-              success: true,
-              fileName: result.fileName,
-              newSimilarityScore: result.newSimilarityScore,
-              newAiScore: result.newAiScore,
-              newReport: result.newReport,
-              docxUrl: `/api/download-turnitin/${encodeURIComponent(result.fileName)}/docx`,
-              pdfUrl: `/api/download-turnitin/${encodeURIComponent(result.fileName)}/pdf`,
-              mdUrl: `/api/download-turnitin/${encodeURIComponent(result.fileName)}/md`,
-            })
-          );
+          res.end(JSON.stringify({ success: true, jobId: paraJobId }));
+
+          (async () => {
+            try {
+              const result = await autoParaphraseTurnitin(
+                parsed.filename || 'Naskah_Turnitin',
+                parsed.text,
+                parsed.turnitinReport,
+                (stepInfo) => {
+                  const j = turnitinParaphraseJobs.get(paraJobId);
+                  if (j) {
+                    j.progress = stepInfo;
+                    j.updatedAt = Date.now();
+                  }
+                  updateJobProgress(paraJobId, 'paraphrasing', stepInfo);
+                }
+              );
+
+              turnitinParaphraseJobs.set(paraJobId, {
+                status: 'completed',
+                progress: 'Parafrase selesai!',
+                result: {
+                  fileName: result.fileName,
+                  newSimilarityScore: result.newSimilarityScore,
+                  newAiScore: result.newAiScore,
+                  newReport: result.newReport,
+                  docxUrl: `/api/download-turnitin/${encodeURIComponent(result.fileName)}/docx`,
+                  pdfUrl: `/api/download-turnitin/${encodeURIComponent(result.fileName)}/pdf`,
+                  mdUrl: `/api/download-turnitin/${encodeURIComponent(result.fileName)}/md`,
+                },
+                owner: jobOwner,
+                createdAt: now,
+                updatedAt: Date.now(),
+              });
+
+              finishJob(paraJobId, `Parafrase selesai: kemiripan turun ke ${result.newSimilarityScore}%.`, `/api/download-turnitin/${encodeURIComponent(result.fileName)}/docx`);
+            } catch (err) {
+              logger.error(`Turnitin paraphrase job ${paraJobId} gagal: ${err}`);
+              turnitinParaphraseJobs.set(paraJobId, {
+                status: 'error',
+                progress: 'Gagal',
+                error: String(err),
+                owner: jobOwner,
+                createdAt: now,
+                updatedAt: Date.now(),
+              });
+              failJob(paraJobId, String(err));
+            }
+          })();
         } catch (err) {
-          if (jobRegistered) failJob(paraJobId, String(err));
           res.writeHead(500, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: String(err) }));
         }
       });
+      return;
+    }
+
+    // GET /api/turnitin/paraphrase/status?jobId=...
+    if (url.pathname === '/api/turnitin/paraphrase/status' && req.method === 'GET') {
+      const jobId = url.searchParams.get('jobId') || '';
+      const job = turnitinParaphraseJobs.get(jobId);
+      if (!job) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Job parafrase tidak ditemukan.' }));
+        return;
+      }
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(job));
       return;
     }
 
