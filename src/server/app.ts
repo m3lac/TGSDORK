@@ -24,6 +24,7 @@ import {
   readTextFromFile,
   autoReviseDocumentText,
   resolveTargetFile,
+  extractAcademicTopic,
 } from '../pipelines/reviewer.js';
 import { scanTurnitinWithGemini, autoParaphraseTurnitin } from '../pipelines/turnitin.js';
 import { requestOtp, verifyOtp, getSessionUser, removeSession } from '../core/auth.js';
@@ -1117,7 +1118,9 @@ export function startServer(port = 3456): void {
         const mdSource = path.join(docsDir, `${passName}.md`);
         if (fs.existsSync(mdSource)) {
           try {
-            await exportMarkdownToPdf(passName, fs.readFileSync(mdSource, 'utf-8'), targetFile);
+            const mdContent = fs.readFileSync(mdSource, 'utf-8');
+            const cleanTitle = extractAcademicTopic(passName, mdContent);
+            await exportMarkdownToPdf(cleanTitle, mdContent, targetFile);
           } catch {}
         }
       }

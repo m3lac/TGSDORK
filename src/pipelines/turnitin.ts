@@ -6,7 +6,7 @@ import { generateText } from '../ai/client.js';
 import { sanitizeManuscriptText } from '../ai/prompts.js';
 import { exportRawDocx } from '../exporter/docx-builder.js';
 import { HUMANIZER_ID_EDITORIAL_RULES } from '../core/humanizer-id.js';
-import { splitDocumentSections } from './reviewer.js';
+import { splitDocumentSections, extractAcademicTopic } from './reviewer.js';
 import { exportMarkdownToPdf } from '../exporter/pdf-builder.js';
 import { logger } from '../core/logger.js';
 
@@ -15,6 +15,115 @@ export interface TurnitinScanResult {
   aiScore: number;
   report: string;
   flaggedSentences: string[];
+}
+
+export function normalizeAcademicManuscript(rawText: string, fallbackTitle = ''): string {
+  let text = rawText
+    .replace(/^```(?:markdown|md)?\s*\n([\s\S]*?)\n```\s*$/i, '$1')
+    .replace(/\r\n/g, '\n');
+
+  const lines = text.split('\n');
+  const cleanedLines: string[] = [];
+
+  let startIdx = 0;
+  for (let i = 0; i < Math.min(3, lines.length); i++) {
+    const l = lines[i].trim();
+    if (
+      /^[A-Za-z0-9_-]+_(?:turnitin_pass|revisi|review)[A-Za-z0-9_-]*$/i.test(l) ||
+      /^(?:makalah|skripsi|presentasi|lit-review)-[a-z0-9-]+$/i.test(l)
+    ) {
+      startIdx = i + 1;
+    }
+  }
+
+  const remainingLines = lines.slice(startIdx);
+
+  for (let i = 0; i < remainingLines.length; i++) {
+    const line = remainingLines[i].trim();
+    if (!line) {
+      cleanedLines.push('');
+      continue;
+    }
+
+    const cleanNoH = line.replace(/^#{1,6}\s+/, '').replace(/\*\*/g, '').trim();
+
+    // BAB X alone followed by chapter title on next line
+    const babAloneMatch = cleanNoH.match(/^(BAB\s+[0-9IVX]+|BAGIAN\s+[0-9IVX]+)$/i);
+    if (babAloneMatch) {
+      const babNum = babAloneMatch[1].toUpperCase();
+      let nextTitle = '';
+      let j = i + 1;
+      while (j < remainingLines.length && !remainingLines[j].trim()) j++;
+      if (j < remainingLines.length) {
+        const nextClean = remainingLines[j].replace(/^#{1,6}\s+/, '').replace(/\*\*/g, '').trim();
+        if (
+          nextClean.length > 2 &&
+          nextClean.length < 80 &&
+          !/^[0-9]+\.[0-9]+/i.test(nextClean) &&
+          !/^(?:bab|bagian)\b/i.test(nextClean)
+        ) {
+          nextTitle = nextClean.toUpperCase();
+          i = j;
+        }
+      }
+      if (nextTitle) {
+        cleanedLines.push(`\n---\n\n## ${babNum}: ${nextTitle}\n`);
+      } else {
+        cleanedLines.push(`\n---\n\n## ${babNum}\n`);
+      }
+      continue;
+    }
+
+    // BAB X: TITLE
+    const fullBabMatch = cleanNoH.match(/^(BAB\s+[0-9IVX]+|BAGIAN\s+[0-9IVX]+)\s*[:.-]\s*(.+)$/i);
+    if (fullBabMatch) {
+      const babNum = fullBabMatch[1].toUpperCase();
+      const babTitle = fullBabMatch[2].trim().toUpperCase();
+      cleanedLines.push(`\n---\n\n## ${babNum}: ${babTitle}\n`);
+      continue;
+    }
+
+    // Standalone chapters
+    const standaloneMatch = cleanNoH.match(
+      /^(ABSTRAK|ABSTRACT|DAFTAR PUSTAKA|REFERENSI|BIBLIOGRAPHY|KATA PENGANTAR|LAMPIRAN)$/i
+    );
+    if (standaloneMatch) {
+      cleanedLines.push(`\n---\n\n## ${standaloneMatch[1].toUpperCase()}\n`);
+      continue;
+    }
+
+    // Decimal subheadings: 1.1 Judul
+    const subMatch = cleanNoH.match(/^([0-9]+\.[0-9]+)\s+(.+)$/);
+    if (subMatch && cleanNoH.length < 120) {
+      cleanedLines.push(`\n### ${subMatch[1]} ${subMatch[2]}\n`);
+      continue;
+    }
+
+    // Decimal sub-subheadings: 1.1.1 Judul
+    const subSubMatch = cleanNoH.match(/^([0-9]+\.[0-9]+\.[0-9]+)\s+(.+)$/);
+    if (subSubMatch && cleanNoH.length < 120) {
+      cleanedLines.push(`\n#### ${subSubMatch[1]} ${subSubMatch[2]}\n`);
+      continue;
+    }
+
+    cleanedLines.push(remainingLines[i]);
+  }
+
+  let result = cleanedLines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+
+  if (!/^#\s+[^\n]+/i.test(result)) {
+    const cleanTitle = fallbackTitle
+      .replace(/_(?:turnitin_pass|revisi|review)+$/i, '')
+      .replace(/[-_]+/g, ' ')
+      .trim()
+      .toUpperCase();
+    if (cleanTitle) {
+      result =
+        `# ${cleanTitle}\n\n*Jenis Dokumen: NASKAH AKADEMIK | Standar Format Baku*\n\n` + result;
+    }
+  }
+
+  return result;
 }
 
 const CACHE_FILE = path.join(os.homedir(), '.tgsdork', 'turnitin_cache.json');
@@ -291,7 +400,10 @@ PERINTAH REKONSTRUKSI & PARAFRASE AKADEMIK (WAJIB LOLOS TURNITIN):
    - Lanjutkan dengan kalimat majemuk bertingkat yang kaya data (25-35 kata).
    - Hindari pola kalimat yang panjangnya seragam agar ritme tulisan terdengar seperti tulisan manusia asli.
 4. Ubah struktur kalimat aktif menjadi pasif atau sebaliknya secara bervariasi.
-5. Tuliskan teks hasil parafrase dalam format Markdown rapi tanpa kata pengantar atau catatan kaki.
+5. Format Bab & Sub-bab:
+   - Tuliskan judul bab dalam SATU baris format H2: "## BAB X: JUDUL BAB". Dilarang memecah menjadi dua baris.
+   - Sub-bab wajib berformat H3 dengan nomor desimal: "### 1.1 Nama Sub-bab".
+   - Tabel wajib dalam format Markdown Table lengkap (| No | Kolom | dan | :--- | :--- |).
 ${HUMANIZER_ID_EDITORIAL_RULES}
 `;
       const rawPart = await generateText({ prompt: secPrompt, role: 'writer' });
@@ -318,7 +430,14 @@ PERINTAH REKONSTRUKSI & PARAFRASE AKADEMIK (WAJIB LOLOS TURNITIN):
    - Lanjutkan dengan kalimat majemuk bertingkat yang kaya data (25-35 kata).
    - Hindari pola kalimat yang panjangnya seragam agar ritme tulisan terdengar seperti tulisan manusia asli.
 4. Ubah struktur kalimat aktif menjadi pasif atau sebaliknya secara bervariasi.
-5. Tuliskan naskah lengkap dari awal hingga akhir dalam format Markdown rapi tanpa kata pengantar atau catatan kaki.
+5. FORMAT & TATA LETAK DOKUMEN AKADEMIK STANDAR DIKTI:
+   - Judul Dokumen di baris teratas: "# JUDUL NASKAH (HURUF BESAR)"
+   - Subjudul di baris kedua: "*Jenis Dokumen: NASKAH AKADEMIK | Standar Format Baku*"
+   - Setiap bab utama WAJIB satu baris format H2: "## BAB I: PENDAHULUAN", "## BAB II: TINJAUAN PUSTAKA...", "## BAB III: METODE PENELITIAN...", "## BAB IV: HASIL DAN PEMBAHASAN...", "## BAB V: PENUTUP", "## DAFTAR PUSTAKA"
+   - DILARANG memecah nomor bab dan judul bab menjadi dua baris terpisah ("### BAB II" lalu "### METODE"). Wajib ditulis dalam satu baris: "## BAB II: METODE...".
+   - Sub-bab wajib berformat H3: "### 1.1 Latar Belakang Masalah", dst.
+   - Tabel pemetaan/perbandingan wajib menggunakan format Markdown Table lengkap (| Kolom 1 | Kolom 2 | dengan garis | :--- | :--- |).
+   - Berikan pemisah horizontal "---" sebelum setiap bab baru.
 ${HUMANIZER_ID_EDITORIAL_RULES}
 `;
 
@@ -328,6 +447,9 @@ ${HUMANIZER_ID_EDITORIAL_RULES}
     });
     paraphrasedText = sanitizeManuscriptText(rawParaphrased);
   }
+
+  const cleanDocTitle = extractAcademicTopic(title, originalText);
+  paraphrasedText = normalizeAcademicManuscript(paraphrasedText, cleanDocTitle);
 
   // Calculate new metrics mathematically
   const newMetrics = computeTurnitinMetrics(paraphrasedText);
@@ -366,11 +488,11 @@ Status: AMAN (<20%)
   fs.writeFileSync(mdPath, paraphrasedText, 'utf-8');
 
   const docxPath = path.join(documentsDir, `${passBaseName}.docx`);
-  await exportRawDocx(passBaseName, paraphrasedText, docxPath);
+  await exportRawDocx(cleanDocTitle, paraphrasedText, docxPath);
 
   // Auto-generate clean PDF in background non-blocking
   const pdfPath = path.join(documentsDir, `${passBaseName}.pdf`);
-  exportMarkdownToPdf(passBaseName, paraphrasedText, pdfPath).catch((pdfErr) => {
+  exportMarkdownToPdf(cleanDocTitle, paraphrasedText, pdfPath).catch((pdfErr) => {
     logger.warn(`Latar PDF bypass Turnitin tertunda: ${pdfErr}`);
   });
 

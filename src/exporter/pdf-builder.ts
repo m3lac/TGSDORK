@@ -61,10 +61,15 @@ function parseChapterHeading(raw: string): { isChapter: boolean; isAbstrak: bool
     const rest = chapMatch[2].trim().toUpperCase();
     return { isChapter: true, isAbstrak: false, num, title: rest || num };
   }
-  if (/^(?:daftar\s+pustaka|references|bibliography|lampiran|kata\s+pengantar)\b/i.test(cleaned)) {
+  if (
+    /^(?:daftar\s+pustaka|references|bibliography|lampiran|kata\s+pengantar|pendahuluan|tinjauan\s+pustaka|landasan\s+teori|kajian\s+pustaka|tinjauan\s+teoretis|metode\s+penelitian|metodologi(?:\s+penelitian)?|metode\s+kajian|metode\s+seleksi\s+literatur|hasil\s+dan\s+pembahasan|pembahasan|analisis\s+dan\s+pembahasan|kesimpulan(?:\s+dan\s+saran)?|penutup|simpulan)\b/i.test(
+      cleaned
+    ) &&
+    cleaned.length < 100
+  ) {
     return { isChapter: true, isAbstrak: false, title: cleaned.toUpperCase() };
   }
-  if (/^(?:abstrak|abstract)\b/i.test(cleaned)) {
+  if (/^(?:abstrak|abstract)\b/i.test(cleaned) && cleaned.length < 50) {
     return { isChapter: true, isAbstrak: true, title: cleaned.toUpperCase() };
   }
   return { isChapter: false, isAbstrak: false, title: cleaned };
@@ -123,7 +128,8 @@ function markdownToCleanHtml(docTitle: string, markdown: string, font: string = 
     if (inOl) { htmlParts.push('</ol>'); inOl = false; }
   };
 
-  for (const rawLine of lines) {
+  for (let idx = 0; idx < lines.length; idx++) {
+    const rawLine = lines[idx];
     const line = rawLine.trim();
 
     if (!line) {
@@ -164,17 +170,36 @@ function markdownToCleanHtml(docTitle: string, markdown: string, font: string = 
           continue;
         }
 
+        let chapterTitle = chapInfo.title;
+        if (chapInfo.num && chapInfo.title === chapInfo.num) {
+          let nextIdx = idx + 1;
+          while (nextIdx < lines.length && !lines[nextIdx].trim()) nextIdx++;
+          if (nextIdx < lines.length) {
+            const nextClean = lines[nextIdx].replace(/^#{1,6}\s+/, '').replace(/\*\*/g, '').trim();
+            if (
+              nextClean.length > 2 &&
+              nextClean.length < 90 &&
+              !/[.,;]$/.test(nextClean) &&
+              !/^(?:[0-9]+\.[0-9]+|BAB\s|BAGIAN\s)/i.test(nextClean) &&
+              !/^(?:[-*]|\d+\.)\s+/.test(nextClean)
+            ) {
+              chapterTitle = nextClean.toUpperCase();
+              lines[nextIdx] = ''; // consumed
+            }
+          }
+        }
+
         const shouldBreak = seenFirstChapter || seenTitle;
         seenFirstChapter = true;
         const breakClass = shouldBreak ? ' page-break' : '';
 
-        if (chapInfo.num && chapInfo.title !== chapInfo.num) {
+        if (chapInfo.num && chapterTitle && chapterTitle !== chapInfo.num) {
           htmlParts.push(
-            `<h2 class="chapter-heading${breakClass}"><span class="chapter-num">${chapInfo.num}</span><span class="chapter-title">${chapInfo.title}</span></h2>`
+            `<h2 class="chapter-heading${breakClass}"><span class="chapter-num">${chapInfo.num}</span><span class="chapter-title">${chapterTitle}</span></h2>`
           );
         } else {
           htmlParts.push(
-            `<h2 class="chapter-heading${breakClass}"><span class="chapter-title">${chapInfo.title || headingText.toUpperCase()}</span></h2>`
+            `<h2 class="chapter-heading${breakClass}"><span class="chapter-title">${chapterTitle || headingText.toUpperCase()}</span></h2>`
           );
         }
         continue;
@@ -192,24 +217,49 @@ function markdownToCleanHtml(docTitle: string, markdown: string, font: string = 
       continue;
     }
 
-    if (/^(?:bab\s+[0-9ivx]+|bagian\s+[0-9ivx]+|daftar\s+pustaka|abstrak|abstract)\b/i.test(line) && line.length < 80 && !/[.,;]$/.test(line)) {
+    if (
+      /^(?:bab\s+[0-9ivx]+|bagian\s+[0-9ivx]+|daftar\s+pustaka|abstrak|abstract|kata\s+pengantar|lampiran|pendahuluan|tinjauan\s+pustaka|landasan\s+teori|metode\s+penelitian|metodologi|hasil\s+dan\s+pembahasan|kesimpulan|penutup|simpulan)\b/i.test(
+        line
+      ) &&
+      line.length < 100 &&
+      !/[.,;]$/.test(line)
+    ) {
       closeLists();
       const chapInfo = parseChapterHeading(line);
       if (chapInfo.isAbstrak) {
         htmlParts.push(`<h2 class="chapter-heading abstrak-heading"><span class="chapter-title">ABSTRAK</span></h2>`);
         continue;
       }
+
+      let chapterTitle = chapInfo.title;
+      if (chapInfo.num && chapInfo.title === chapInfo.num) {
+        let nextIdx = idx + 1;
+        while (nextIdx < lines.length && !lines[nextIdx].trim()) nextIdx++;
+        if (nextIdx < lines.length) {
+          const nextClean = lines[nextIdx].replace(/^#{1,6}\s+/, '').replace(/\*\*/g, '').trim();
+          if (
+            nextClean.length > 2 &&
+            nextClean.length < 90 &&
+            !/[.,;]$/.test(nextClean) &&
+            !/^(?:[0-9]+\.[0-9]+|BAB\s|BAGIAN\s)/i.test(nextClean) &&
+            !/^(?:[-*]|\d+\.)\s+/.test(nextClean)
+          ) {
+            chapterTitle = nextClean.toUpperCase();
+            lines[nextIdx] = '';
+          }
+        }
+      }
+
       const shouldBreak = seenFirstChapter || seenTitle;
       seenFirstChapter = true;
       const breakClass = shouldBreak ? ' page-break' : '';
-      if (chapInfo.num && chapInfo.title !== chapInfo.num) {
-        htmlParts.push(`<h2 class="chapter-heading${breakClass}"><span class="chapter-num">${chapInfo.num}</span><span class="chapter-title">${chapInfo.title}</span></h2>`);
+      if (chapInfo.num && chapterTitle && chapterTitle !== chapInfo.num) {
+        htmlParts.push(`<h2 class="chapter-heading${breakClass}"><span class="chapter-num">${chapInfo.num}</span><span class="chapter-title">${chapterTitle}</span></h2>`);
       } else {
-        htmlParts.push(`<h2 class="chapter-heading${breakClass}"><span class="chapter-title">${chapInfo.title || line.toUpperCase()}</span></h2>`);
+        htmlParts.push(`<h2 class="chapter-heading${breakClass}"><span class="chapter-title">${chapterTitle || line.toUpperCase()}</span></h2>`);
       }
       continue;
     }
-
     if (/^\*Jenis Dokumen:.*\*$/i.test(line)) {
       closeLists();
       htmlParts.push(`<p class="paper-subtitle no-indent">${formatInlineHtml(line)}</p>`);

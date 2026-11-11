@@ -30,7 +30,7 @@ import { verifySourceItems } from '../dorker/verifier.js';
 import { logger } from '../core/logger.js';
 import type { TaskState, SourceItem } from '../types/index.js';
 
-function extractAcademicTopic(rawTitle: string, text: string): string {
+export function extractAcademicTopic(rawTitle: string, text: string): string {
   const firstLines = text
     .split('\n')
     .map((l) => l.trim())
@@ -68,17 +68,60 @@ export function readTextFromDocx(filePath: string): string {
       stdio: ['ignore', 'pipe', 'ignore'],
     });
     const $ = cheerio.load(xml, { xmlMode: true });
-    const paragraphs: string[] = [];
-    $('w\\:p').each((_, p) => {
+    const blocks: string[] = [];
+
+    const extractParagraphText = (p: cheerio.Cheerio<any>) => {
       let line = '';
-      $(p)
-        .find('w\\:t')
-        .each((_, t) => {
-          line += $(t).text();
+      p.find('w\\:t').each((_, t) => {
+        line += $(t).text();
+      });
+      return line.trim();
+    };
+
+    $('w\\:body').children().each((_, elem) => {
+      const tagName = elem.tagName || '';
+      if (tagName.endsWith('p')) {
+        const pText = extractParagraphText($(elem));
+        if (pText) blocks.push(pText);
+      } else if (tagName.endsWith('tbl')) {
+        const rows: string[][] = [];
+        $(elem).find('w\\:tr').each((_, tr) => {
+          const cells: string[] = [];
+          $(tr).find('w\\:tc').each((_, tc) => {
+            let cellText = '';
+            $(tc).find('w\\:t').each((_, t) => {
+              cellText += $(t).text();
+            });
+            cells.push(cellText.replace(/\s+/g, ' ').replace(/\|/g, '-').trim());
+          });
+          if (cells.length > 0 && cells.some(Boolean)) {
+            rows.push(cells);
+          }
         });
-      if (line.trim()) paragraphs.push(line.trim());
+        if (rows.length > 0) {
+          const maxCols = Math.max(...rows.map((r) => r.length));
+          const padRow = (r: string[]) => {
+            while (r.length < maxCols) r.push('');
+            return `| ${r.join(' | ')} |`;
+          };
+          const tableMd: string[] = [padRow(rows[0])];
+          tableMd.push(`| ${Array(maxCols).fill(':---').join(' | ')} |`);
+          for (let r = 1; r < rows.length; r++) {
+            tableMd.push(padRow(rows[r]));
+          }
+          blocks.push(tableMd.join('\n'));
+        }
+      }
     });
-    return paragraphs.join('\n\n');
+
+    if (blocks.length === 0) {
+      $('w\\:p').each((_, p) => {
+        const line = extractParagraphText($(p));
+        if (line) blocks.push(line);
+      });
+    }
+
+    return blocks.join('\n\n');
   } catch (err) {
     throw new Error(`Gagal membaca file .docx (${String(err)})`);
   }

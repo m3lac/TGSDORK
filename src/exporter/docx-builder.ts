@@ -41,10 +41,15 @@ function splitChapterHeading(raw: string): { isChapter: boolean; isAbstrak: bool
     const rest = chapMatch[2].trim().toUpperCase();
     return { isChapter: true, isAbstrak: false, num, title: rest || num };
   }
-  if (/^(?:daftar\s+pustaka|references|bibliography|lampiran|kata\s+pengantar)\b/i.test(cleaned)) {
+  if (
+    /^(?:daftar\s+pustaka|references|bibliography|lampiran|kata\s+pengantar|pendahuluan|tinjauan\s+pustaka|landasan\s+teori|kajian\s+pustaka|tinjauan\s+teoretis|metode\s+penelitian|metodologi(?:\s+penelitian)?|metode\s+kajian|metode\s+seleksi\s+literatur|hasil\s+dan\s+pembahasan|pembahasan|analisis\s+dan\s+pembahasan|kesimpulan(?:\s+dan\s+saran)?|penutup|simpulan)\b/i.test(
+      cleaned
+    ) &&
+    cleaned.length < 100
+  ) {
     return { isChapter: true, isAbstrak: false, title: cleaned.toUpperCase() };
   }
-  if (/^(?:abstrak|abstract)\b/i.test(cleaned)) {
+  if (/^(?:abstrak|abstract)\b/i.test(cleaned) && cleaned.length < 50) {
     return { isChapter: true, isAbstrak: true, title: cleaned.toUpperCase() };
   }
   return { isChapter: false, isAbstrak: false, title: cleaned };
@@ -243,7 +248,7 @@ function normalizeMarkdownBlocks(md: string): string[] {
     }
 
     if (
-      /^(?:bab\s+[0-9ivx]+|bagian\s+[0-9ivx]+|daftar\s+pustaka|abstrak|abstract|kata\s+pengantar|lampiran)\b/i.test(
+      /^(?:bab\s+[0-9ivx]+|bagian\s+[0-9ivx]+|daftar\s+pustaka|abstrak|abstract|kata\s+pengantar|lampiran|pendahuluan|tinjauan\s+pustaka|landasan\s+teori|metode\s+penelitian|metodologi|hasil\s+dan\s+pembahasan|kesimpulan|penutup|simpulan)\b/i.test(
         trimmed
       ) &&
       trimmed.length < 100 &&
@@ -362,23 +367,67 @@ function pushMarkdownBlocks(
       continue;
     }
 
-    if (/^#{1,6}\s+/.test(text)) {
-      const chapInfo = splitChapterHeading(text);
-      if (chapInfo.isChapter) {
-        const shouldBreak = Boolean(opts.allowChapterBreak) && (!chapInfo.isAbstrak || seenFirstChapter);
-        seenFirstChapter = true;
-        target.push(...buildChapterParagraphs(text, font, shouldBreak));
-        continue;
-      }
-      const cleanHeading = text.replace(/^#{1,6}\s+/, '').trim();
+    if (/^\*Jenis\s+(?:Dokumen|Tugas):.*\*$/i.test(text)) {
       target.push(
         new Paragraph({
-          alignment: AlignmentType.LEFT,
-          keepNext: true,
-          children: parseInlineRuns(cleanHeading, font, { bold: true, size: 24 }),
-          spacing: { line: 360, before: 220, after: 100 },
+          alignment: AlignmentType.CENTER,
+          children: [
+            new TextRun({
+              text: text.replace(/^\*|\*$/g, '').trim(),
+              font,
+              italics: true,
+              size: 20,
+            }),
+          ],
+          spacing: { after: 320 },
         })
       );
+      continue;
+    }
+
+    if (/^#{1,6}\s+/.test(text)) {
+      let chapInfo = splitChapterHeading(text);
+      if (chapInfo.isChapter) {
+        let headingToBuild = text;
+        if (chapInfo.num && chapInfo.title === chapInfo.num && idx + 1 < blocks.length) {
+          const nextBlock = blocks[idx + 1];
+          const nextClean = nextBlock.replace(/^#{1,6}\s+/, '').replace(/\*\*/g, '').trim();
+          if (
+            nextClean.length > 2 &&
+            nextClean.length < 90 &&
+            !/[.,;]$/.test(nextClean) &&
+            !/^(?:[0-9]+\.[0-9]+|BAB\s|BAGIAN\s)/i.test(nextClean) &&
+            !/^(?:[-*]|\d+\.)\s+/.test(nextClean)
+          ) {
+            headingToBuild = `${chapInfo.num}: ${nextClean}`;
+            idx++;
+          }
+        }
+        const shouldBreak = Boolean(opts.allowChapterBreak) && (!chapInfo.isAbstrak || seenFirstChapter);
+        seenFirstChapter = true;
+        target.push(...buildChapterParagraphs(headingToBuild, font, shouldBreak));
+        continue;
+      }
+      const isH1Title = /^#\s+/.test(text) && !seenFirstChapter && idx <= 2;
+      const cleanHeading = text.replace(/^#{1,6}\s+/, '').trim();
+      if (isH1Title) {
+        target.push(
+          new Paragraph({
+            alignment: AlignmentType.CENTER,
+            children: parseInlineRuns(cleanHeading.toUpperCase(), font, { bold: true, size: 28 }),
+            spacing: { before: 0, after: 160 },
+          })
+        );
+      } else {
+        target.push(
+          new Paragraph({
+            alignment: AlignmentType.LEFT,
+            keepNext: true,
+            children: parseInlineRuns(cleanHeading, font, { bold: true, size: 24 }),
+            spacing: { line: 360, before: 220, after: 100 },
+          })
+        );
+      }
       continue;
     }
 
@@ -491,6 +540,15 @@ export async function exportToDocx(state: TaskState, customFont?: string): Promi
   return filePath;
 }
 
+function cleanRawDocTitle(raw: string): string {
+  return raw
+    .replace(/_(?:revisi|review|turnitin_pass)+$/gi, '')
+    .replace(/^(?:makalah|skripsi|presentasi|lit-review)-/i, '')
+    .replace(/-[0-9a-f]{6}$/i, '')
+    .replace(/[_-]+/g, ' ')
+    .trim();
+}
+
 export async function exportRawDocx(
   title: string,
   markdownText: string,
@@ -498,24 +556,33 @@ export async function exportRawDocx(
   customFont: string = 'Times New Roman'
 ): Promise<string> {
   const font = customFont || 'Times New Roman';
-  const paragraphs: Array<Paragraph | Table> = [
-    new Paragraph({
-      alignment: AlignmentType.CENTER,
-      children: [
-        new TextRun({
-          text: title.toUpperCase(),
-          font,
-          bold: true,
-          size: 28,
-        }),
-      ],
-      spacing: { before: 0, after: 280 },
-    }),
-  ];
-
   const blocks = normalizeMarkdownBlocks(markdownText);
-  pushMarkdownBlocks(blocks, paragraphs, font, { skipTitle: title, allowChapterBreak: true });
+  const firstIsH1Title =
+    blocks.length > 0 && /^#\s+/.test(blocks[0]) && !splitChapterHeading(blocks[0]).isChapter;
 
+  const paragraphs: Array<Paragraph | Table> = [];
+  if (!firstIsH1Title) {
+    const cleanTitle = cleanRawDocTitle(title) || title;
+    paragraphs.push(
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        children: [
+          new TextRun({
+            text: cleanTitle.toUpperCase(),
+            font,
+            bold: true,
+            size: 28,
+          }),
+        ],
+        spacing: { before: 0, after: 280 },
+      })
+    );
+  }
+
+  pushMarkdownBlocks(blocks, paragraphs, font, {
+    skipTitle: firstIsH1Title ? undefined : cleanRawDocTitle(title),
+    allowChapterBreak: true,
+  });
   const doc = new Document({
     styles: {
       default: {
