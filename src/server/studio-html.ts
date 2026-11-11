@@ -8,7 +8,10 @@ export function renderStudioHtml(devUiMode = false): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="color-scheme" content="dark" />
   <meta name="theme-color" content="#090a0f" />
+  <meta name="description" content="TGSDORK Studio — Otomasi riset dan penulisan naskah akademik berbasis Google Dorking dan AI." />
+  <meta name="robots" content="index, follow" />
   <title>TGSDORK Studio</title>
+  <link rel="canonical" href="https://tgsdork.com/studio" />
   <link rel="icon" type="image/png" href="data:image/png;base64,${FAVICON_B64}" />
   <link rel="apple-touch-icon" href="data:image/png;base64,${FAVICON_B64}" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />

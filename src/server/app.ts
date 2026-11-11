@@ -272,6 +272,30 @@ export function startServer(port = 3456): void {
       return;
     }
 
+    // GET /robots.txt
+    if (url.pathname === '/robots.txt' && (req.method === 'GET' || req.method === 'HEAD')) {
+      const robots = `User-agent: *\nAllow: /\n\nSitemap: https://tgsdork.com/sitemap.xml\n`;
+      res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'public, max-age=3600' });
+      if (req.method === 'HEAD') {
+        res.end();
+        return;
+      }
+      res.end(robots);
+      return;
+    }
+
+    // GET /sitemap.xml
+    if (url.pathname === '/sitemap.xml' && (req.method === 'GET' || req.method === 'HEAD')) {
+      const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url>\n    <loc>https://tgsdork.com/</loc>\n    <changefreq>weekly</changefreq>\n    <priority>1.0</priority>\n  </url>\n  <url>\n    <loc>https://tgsdork.com/studio</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n</urlset>\n`;
+      res.writeHead(200, { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' });
+      if (req.method === 'HEAD') {
+        res.end();
+        return;
+      }
+      res.end(sitemap);
+      return;
+    }
+
     // GET /public/* (Static UI assets: CSS, JS, fonts, icons, images)
     if (url.pathname.startsWith('/public/') && (req.method === 'GET' || req.method === 'HEAD')) {
       const publicRoot = path.resolve(process.cwd(), 'public');

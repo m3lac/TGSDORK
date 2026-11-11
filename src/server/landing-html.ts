@@ -8,8 +8,30 @@ export function renderLandingHtml(devUiMode = false): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="color-scheme" content="dark" />
   <meta name="theme-color" content="#090a0f" />
-  <meta name="description" content="TGSDORK — Automated Academic Research &amp; Manuscript Studio." />
+  <meta name="description" content="TGSDORK — Automated Academic Research &amp; Manuscript Studio based on Google Dorking and AI." />
+  <meta name="keywords" content="tgsdork, google dorking, riset akademik, makalah ai, skripsi ai, literature review, academic search, dorking studio" />
+  <meta name="robots" content="index, follow" />
   <title>TGSDORK — Academic Research &amp; Manuscript Studio</title>
+  <link rel="canonical" href="https://tgsdork.com/" />
+  <meta property="og:site_name" content="TGSDORK" />
+  <meta property="og:title" content="TGSDORK — Academic Research &amp; Manuscript Studio" />
+  <meta property="og:description" content="Automated Academic Research &amp; Manuscript Studio based on Google Dorking and AI." />
+  <meta property="og:url" content="https://tgsdork.com/" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="TGSDORK — Academic Research &amp; Manuscript Studio" />
+  <meta name="twitter:description" content="Automated Academic Research &amp; Manuscript Studio based on Google Dorking and AI." />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "TGSDORK",
+    "url": "https://tgsdork.com",
+    "description": "Automated Academic Research & Manuscript Studio based on Google Dorking and AI.",
+    "applicationCategory": "EducationalApplication",
+    "operatingSystem": "All"
+  }
+  </script>
   <link rel="icon" type="image/png" href="data:image/png;base64,${FAVICON_B64}" />
   <link rel="apple-touch-icon" href="data:image/png;base64,${FAVICON_B64}" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
