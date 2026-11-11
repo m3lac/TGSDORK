@@ -17,8 +17,6 @@ import {
   splitAcademicSentences,
   extractWords,
   compareSentenceSimilarity,
-  findMatchesInStudentCorpus,
-  registerScannedManuscriptToCorpus,
   computeContentHash,
 } from '../core/corpus.js';
 import type {
@@ -165,7 +163,15 @@ const CACHE_FILE = path.join(os.homedir(), '.tgsdork', 'turnitin_cache.json');
 function loadTurnitinDiskCache(): Record<string, TurnitinScanResult> {
   try {
     if (fs.existsSync(CACHE_FILE)) {
-      return JSON.parse(fs.readFileSync(CACHE_FILE, 'utf-8'));
+      const raw = JSON.parse(fs.readFileSync(CACHE_FILE, 'utf-8'));
+      for (const k of Object.keys(raw)) {
+        if (raw[k] && Array.isArray(raw[k].sources)) {
+          raw[k].sources = raw[k].sources.filter(
+            (s: TurnitinMatchSource) => s.institution !== 'TGSDORK Student Repository'
+          );
+        }
+      }
+      return raw;
     }
   } catch {}
   return {};
@@ -401,7 +407,7 @@ function classifySourceType(item: SourceItem): {
       type: 'student_paper',
       typeLabel: 'Student Papers',
       cleanTitle: rawTitle,
-      institution: campusName || (domain.includes('.ac.id') ? 'Repositori Perguruan Tinggi Indonesia' : 'Repositori Mahasiswa'),
+      institution: campusName || (domain.includes('.ac.id') ? 'Repositori Perguruan Tinggi Indonesia' : 'Repositori Kampus'),
       domain: domain || 'Repositori Kampus',
       year: item.year,
       doi: item.doi,
@@ -556,7 +562,10 @@ export async function scanTurnitinWithGemini(
 
   const diskCache = loadTurnitinDiskCache();
   if (isVerifiedBypassFile && diskCache[`pass_${hash}`] && diskCache[`pass_${hash}`].sources) {
-    return diskCache[`pass_${hash}`];
+    const cached = diskCache[`pass_${hash}`];
+    if (cached.sources && !cached.sources.some((s) => s.institution === 'TGSDORK Student Repository')) {
+      return cached;
+    }
   }
 
   logger.step('TURNITIN', `Menganalisis kemiripan Turnitin real-time untuk "${title}"...`);
@@ -579,9 +588,6 @@ export async function scanTurnitinWithGemini(
   const totalScannableWords = Math.max(1, extractWords(bodyText).length);
   const metrics = computeTurnitinMetrics(cleanText);
 
-  // 2. Live Student Paper Corpus check (local workspace + prior submissions, ~10ms)
-  const studentCorpusMatches = findMatchesInStudentCorpus(scannableSentences, title, hash);
-
   // 3. Web & Academic Repositories search (with 24h cache per content hash)
   const webCache = loadWebSourceCache();
   const cachedWeb = webCache[hash];
@@ -600,21 +606,22 @@ export async function scanTurnitinWithGemini(
     }
   } else {
     if (searchQueries.length > 0) {
-      const webCandidates = await withTimeout(searchPlagiarismSources(searchQueries, 8), 6500, []);
-      const enrichTasks = webCandidates.slice(0, 3).map((item) => {
+      const webCandidates = await withTimeout(searchPlagiarismSources(searchQueries, 12), 7000, []);
+      const enrichTasks = webCandidates.slice(0, 5).map((item) => {
         if (!item.content || item.content.length < 250) {
           return withTimeout(extractContentFromSource(item), 3500, item);
         }
         return Promise.resolve(item);
       });
       const enriched = await Promise.all(enrichTasks);
-      for (const it of enriched) {
+      const allCandidates = [...enriched, ...webCandidates.slice(5)];
+      for (const it of allCandidates) {
         if (!activeSourcesList.some((s) => s.url === it.url)) {
           activeSourcesList.push(it);
         }
       }
-      if (enriched.length > 0) {
-        webCache[hash] = { ts: Date.now(), items: enriched };
+      if (allCandidates.length > 0) {
+        webCache[hash] = { ts: Date.now(), items: allCandidates };
         saveWebSourceCache(webCache);
       }
     }
@@ -640,28 +647,6 @@ export async function scanTurnitinWithGemini(
 
   const bestBySentence = new Map<string, RawSentenceMatch>();
 
-  for (const docMatch of studentCorpusMatches) {
-    for (const sm of docMatch.matchedSentences) {
-      const candidate: RawSentenceMatch = {
-        sentence: sm.sentence,
-        sentenceIndex: sm.sentenceIndex,
-        sourceKey: `student:${docMatch.docId}`,
-        sourceTitle: docMatch.title,
-        institution: 'TGSDORK Student Repository',
-        domain: 'Arsip Naskah Mahasiswa',
-        year: docMatch.createdAt ? docMatch.createdAt.slice(0, 4) : undefined,
-        sourceType: 'student_paper',
-        sourceTypeLabel: 'Student Papers',
-        matchedSnippet: sm.matchedCorpusSentence,
-        score: sm.overlapScore,
-        wordCount: extractWords(sm.sentence).length,
-      };
-      const existing = bestBySentence.get(sm.sentence);
-      if (!existing || candidate.score > existing.score) {
-        bestBySentence.set(sm.sentence, candidate);
-      }
-    }
-  }
 
   for (let sIdx = 0; sIdx < scannableSentences.length; sIdx++) {
     const s = scannableSentences[sIdx];
@@ -827,11 +812,6 @@ export async function scanTurnitinWithGemini(
 
   const annotatedHtml = buildAnnotatedDocumentHtml(bodyText, bibliographyText, matchedSentencesMap);
 
-  try {
-    registerScannedManuscriptToCorpus(title, cleanText);
-  } catch (err) {
-    logger.warn(`Penyimpanan korpus naskah: ${String(err)}`);
-  }
 
   const statusLabel =
     similarityScore < 20
@@ -864,7 +844,7 @@ Status: ${statusLabel}
 | Kategori Sumber | Estimasi Proporsi | Catatan |
 | :--- | :--- | :--- |
 | Internet Sources | ${internetSources}% | Sumber web terbuka, ensiklopedia digital, dan artikel portal |
-| Student Papers | ${studentPapers}% | Repositori karya ilmiah mahasiswa (TGSDORK Corpus & Arsip Kampus) |
+| Student Papers | ${studentPapers}% | Repositori karya ilmiah & tugas akhir perguruan tinggi (Repositori Kampus) |
 | Publications | ${publications}% | Jurnal ilmiah nasional (SINTA/Garuda/DOAJ) & internasional |
 
 ---

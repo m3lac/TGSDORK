@@ -64,13 +64,15 @@ assert.ok(matches.length > 0, 'Must detect match against student paper A');
 assert.strictEqual(matches[0].docId, 'test-paper-a');
 assert.ok(matches[0].matchedWords >= 8, 'Matched words must be >= 8');
 
-// 4. End-to-end Turnitin scan result structure
+// 4. End-to-end Turnitin scan result structure (TGSDORK Student Repository must be hidden)
 const scan = await scanTurnitinWithGemini('Karya_Tulis_Mahasiswa_B.docx', docBText);
-assert.ok(scan.similarityScore > 0, 'Similarity score must be > 0');
-assert.ok(scan.sources && scan.sources.length > 0, 'Sources list must be populated');
-assert.ok(scan.sources[0].color.startsWith('#'), 'Source must have valid hex color');
-assert.strictEqual(scan.sources[0].type, 'student_paper', 'Source type must be student_paper');
-assert.ok(scan.annotatedHtml?.includes('turnitin-mark'), 'Annotated HTML must include turnitin-mark tags');
+assert.ok(typeof scan.similarityScore === 'number' && scan.similarityScore >= 0, 'Similarity score must be non-negative');
+assert.ok(Array.isArray(scan.sources), 'Sources list must be an array');
+assert.ok(
+  !scan.sources.some((s) => s.institution === 'TGSDORK Student Repository'),
+  'TGSDORK Student Repository must not appear in scan sources'
+);
+assert.ok(scan.annotatedHtml?.includes('turnitin-paper-sheet'), 'Annotated HTML must render paper sheet');
 assert.ok(scan.report.includes('Similarity Index'), 'Report must include Similarity Index');
 
 

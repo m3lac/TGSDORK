@@ -17,7 +17,7 @@ export function renderStudioHtml(devUiMode = false): string {
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/public/styles.css?v=20261112_07" />
+  <link rel="stylesheet" href="/public/styles.css?v=20261112_08" />
 </head>
 <body class="studio-body">
   <a href="#mainApp" class="skip-link">Lewati ke ruang kerja utama</a>
@@ -615,7 +615,7 @@ export function renderStudioHtml(devUiMode = false): string {
                     <div class="metric-box">
                       <div class="metric-box-label">Student Papers</div>
                       <div class="metric-box-value" id="simStudentBadge" style="color: #c084fc;">--%</div>
-                      <div class="metric-box-note">Korpus Mahasiswa</div>
+                      <div class="metric-box-note">Repositori Kampus</div>
                     </div>
                   </div>
 
@@ -627,7 +627,7 @@ export function renderStudioHtml(devUiMode = false): string {
                   <div class="turnitin-cat-legend" id="turnitinCategoryLegend" style="display: none;">
                     <span class="turnitin-legend-item"><span class="turnitin-legend-dot internet"></span> Internet (<span id="legInternetPct">0%</span>)</span>
                     <span class="turnitin-legend-item"><span class="turnitin-legend-dot pub"></span> Publikasi (<span id="legPubPct">0%</span>)</span>
-                    <span class="turnitin-legend-item"><span class="turnitin-legend-dot student"></span> Naskah Mahasiswa (<span id="legStudentPct">0%</span>)</span>
+                    <span class="turnitin-legend-item"><span class="turnitin-legend-dot student"></span> Repositori Kampus (<span id="legStudentPct">0%</span>)</span>
                     <span class="turnitin-legend-item" style="margin-left: auto; color: var(--ink-muted);">AI Writing: <strong id="aiScoreBadge" style="color: #fff;">--%</strong> (<span id="aiStatusBadge">Alami</span>)</span>
                   </div>
 
@@ -654,7 +654,7 @@ export function renderStudioHtml(devUiMode = false): string {
                       <div class="turnitin-source-filters" id="turnitinSourceFilters">
                         <button type="button" class="t-filter-chip active" data-src-filter="all" onclick="TGSDORK.filterTurnitinSources('all')">Semua</button>
                         <button type="button" class="t-filter-chip" data-src-filter="publication" onclick="TGSDORK.filterTurnitinSources('publication')">Publikasi</button>
-                        <button type="button" class="t-filter-chip" data-src-filter="student_paper" onclick="TGSDORK.filterTurnitinSources('student_paper')">Mahasiswa</button>
+                        <button type="button" class="t-filter-chip" data-src-filter="student_paper" onclick="TGSDORK.filterTurnitinSources('student_paper')">Kampus</button>
                         <button type="button" class="t-filter-chip" data-src-filter="internet" onclick="TGSDORK.filterTurnitinSources('internet')">Internet</button>
                       </div>
                       <div id="turnitinSourcesList" class="turnitin-sources-list">
@@ -885,7 +885,7 @@ export function renderStudioHtml(devUiMode = false): string {
   <div id="toastStack" class="toast-stack" aria-live="polite"></div>
 
   <script>window.__TGSDORK_DEV_UI__ = ${devUiMode ? 'true' : 'false'};</script>
-  <script src="/public/app.js?v=20261112_07"></script>
+  <script src="/public/app.js?v=20261112_08"></script>
 </body>
 </html>`;
 }

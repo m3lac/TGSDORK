@@ -877,7 +877,8 @@
       });
     }
 
-    const sources = Array.isArray(d.sources) ? d.sources : [];
+    const rawSources = Array.isArray(d.sources) ? d.sources : [];
+    const sources = rawSources.filter((s) => s.institution !== 'TGSDORK Student Repository');
     if (sourcesCountEl) {
       sourcesCountEl.textContent = sources.length + ' Sumber';
     }
@@ -893,7 +894,7 @@
             const domainSub = s.domain && s.domain !== s.institution ? s.domain : '';
             const actionLinkHtml = s.url
               ? `<a href="${escapeHtml(s.url)}" target="_blank" rel="noopener noreferrer" class="turnitin-source-link-btn" onclick="event.stopPropagation()">Buka Tautan &nearr;</a>`
-              : `<span style="font-size:10px;color:var(--ink-muted);">Korpus Mahasiswa</span>`;
+              : `<span style="font-size:10px;color:var(--ink-muted);">${getStudioLanguage() === 'en' ? 'Campus Repository' : 'Repositori Kampus'}</span>`;
 
             let metaDetail = '';
             if (s.year) metaDetail += `(${s.year}) &bull; `;
@@ -1789,13 +1790,13 @@
       }
       if (m1Note) m1Note.textContent = isEn ? 'Web & Encyclopedias' : 'Web & Ensiklopedia';
       if (m2Note) m2Note.textContent = isEn ? 'Indexed Journals' : 'Jurnal SINTA/DOAJ';
-      if (m3Note) m3Note.textContent = isEn ? 'Student Papers Corpus' : 'Korpus Mahasiswa';
+      if (m3Note) m3Note.textContent = isEn ? 'Campus Repositories' : 'Repositori Kampus';
     }
     const srcChips = document.querySelectorAll('#turnitinSourceFilters .t-filter-chip');
     if (srcChips.length >= 4) {
       srcChips[0].textContent = isEn ? 'All' : 'Semua';
       srcChips[1].textContent = isEn ? 'Publications' : 'Publikasi';
-      srcChips[2].textContent = isEn ? 'Student' : 'Mahasiswa';
+      srcChips[2].textContent = isEn ? 'Campus' : 'Kampus';
       srcChips[3].textContent = 'Internet';
     }
     const tDefaultContent = document.getElementById('turnitinReportContent');

@@ -740,12 +740,11 @@ export async function searchPlagiarismSources(
     addItems(exactLocal);
   } catch {}
 
-  for (const q of queries.slice(0, 3)) {
+  for (const q of queries.slice(0, 2)) {
     try {
       const local = searchLocalJournals(q, 2);
       addItems(local);
     } catch {}
-    if (combined.length >= maxTotal) return combined;
   }
 
   // 2. Query academic APIs concurrently with strict timeout
@@ -768,8 +767,6 @@ export async function searchPlagiarismSources(
   for (const r of academicResults) {
     if (r.status === 'fulfilled') addItems(r.value);
   }
-
-  if (combined.length >= maxTotal) return combined;
 
   // 3. National Indonesian Campus Repositories & Aggregators Pass
   for (const q of queries.slice(0, 2)) {
