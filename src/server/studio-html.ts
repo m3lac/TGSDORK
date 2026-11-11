@@ -17,7 +17,7 @@ export function renderStudioHtml(devUiMode = false): string {
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/public/styles.css?v=20261112_03" />
+  <link rel="stylesheet" href="/public/styles.css?v=20261112_04" />
 </head>
 <body class="studio-body">
   <a href="#mainApp" class="skip-link">Lewati ke ruang kerja utama</a>
@@ -180,7 +180,7 @@ export function renderStudioHtml(devUiMode = false): string {
                 </div>
                 <span class="card-foot" id="ovRunningNote" data-i18n="ov_jobs_note">Semua proses jalan paralel tanpa antrean</span>
               </article>
-
+            </div>
             <div class="panel ov-live-jobs-panel" id="ovLiveJobsPanel" style="display: none; margin-bottom: 16px;">
               <div class="panel-header" style="margin-bottom: 10px;">
                 <div style="display: flex; align-items: center; gap: 8px;">
@@ -885,7 +885,7 @@ export function renderStudioHtml(devUiMode = false): string {
   <div id="toastStack" class="toast-stack" aria-live="polite"></div>
 
   <script>window.__TGSDORK_DEV_UI__ = ${devUiMode ? 'true' : 'false'};</script>
-  <script src="/public/app.js?v=20261112_03"></script>
+  <script src="/public/app.js?v=20261112_04"></script>
 </body>
 </html>`;
 }
