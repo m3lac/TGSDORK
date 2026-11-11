@@ -17,7 +17,7 @@ export function renderStudioHtml(devUiMode = false): string {
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/public/styles.css?v=20261112_06" />
+  <link rel="stylesheet" href="/public/styles.css?v=20261112_07" />
 </head>
 <body class="studio-body">
   <a href="#mainApp" class="skip-link">Lewati ke ruang kerja utama</a>
@@ -345,7 +345,7 @@ export function renderStudioHtml(devUiMode = false): string {
                       </select>
                     </div>
                     <div class="form-group">
-                      <label for="customRefInput">Lampiran Jurnal <span class="label-hint">(opsional)</span></label>
+                      <label for="customRefInput"><span data-i18n="gen_ref_label">Lampiran Jurnal</span> <span class="label-hint" data-i18n="gen_ref_opt">(opsional)</span></label>
                       <input type="file" id="customRefInput" class="file-input-compact" accept=".pdf,.docx,.md,.txt" multiple />
                     </div>
                   </div>
@@ -493,7 +493,7 @@ export function renderStudioHtml(devUiMode = false): string {
 
                 <div class="form-group" style="margin-top: 14px;">
                   <label for="manualFilePath" data-i18n="review_manual_label">Atau nama berkas di ~/Documents</label>
-                  <input type="text" id="manualFilePath" placeholder="Contoh: makalah_pendidikan.docx" />
+                  <input type="text" id="manualFilePath" data-i18n-placeholder="review_manual_placeholder" placeholder="Contoh: makalah_pendidikan.docx" />
                 </div>
 
                 <button type="button" id="btnAudit" class="btn-primary" data-i18n="review_submit_btn" onclick="TGSDORK.executeAudit()">Periksa Kelayakan Naskah</button>
@@ -557,7 +557,7 @@ export function renderStudioHtml(devUiMode = false): string {
 
                 <div class="form-group" style="margin-top: 14px;">
                   <label for="turnitinText" data-i18n="turnitin_manual_label">Atau tempel teks naskah</label>
-                  <textarea id="turnitinText" rows="5" placeholder="Tempel teks naskah..."></textarea>
+                  <textarea id="turnitinText" data-i18n-placeholder="turnitin_text_placeholder" rows="5" placeholder="Tempel teks naskah..."></textarea>
                 </div>
                 <div class="turnitin-options-box">
                   <div style="font-weight: 600; color: var(--ink-secondary); margin-bottom: 6px;">Filter Turnitin Kampus:</div>
@@ -591,7 +591,7 @@ export function renderStudioHtml(devUiMode = false): string {
                     </div>
                     <button type="button" class="action-btn" id="btnToggleSourcesPane" style="display: none;" onclick="TGSDORK.toggleTurnitinSourcesPane()">Sembunyikan Sumber</button>
                     <button type="button" class="action-btn accent" id="btnDoTurnitinParaphrase" data-i18n="turnitin_do_para_btn" onclick="TGSDORK.triggerTurnitinParaphrase()">Parafrase Otomatis</button>
-                    <button type="button" class="action-btn" onclick="TGSDORK.copyTurnitinReport()">Salin</button>
+                    <button type="button" class="action-btn" data-i18n="btn_copy_turnitin" onclick="TGSDORK.copyTurnitinReport()">Salin</button>
                   </div>
                 </div>
 
@@ -885,7 +885,7 @@ export function renderStudioHtml(devUiMode = false): string {
   <div id="toastStack" class="toast-stack" aria-live="polite"></div>
 
   <script>window.__TGSDORK_DEV_UI__ = ${devUiMode ? 'true' : 'false'};</script>
-  <script src="/public/app.js?v=20261112_06"></script>
+  <script src="/public/app.js?v=20261112_07"></script>
 </body>
 </html>`;
 }

@@ -1488,6 +1488,22 @@
       modal_auth_verify_btn: 'Verifikasi & Masuk Studio',
       modal_auth_resend: 'Kirim Ulang Kode',
       modal_auth_change_email: 'Ganti Alamat Email',
+      gen_ref_label: 'Lampiran Jurnal',
+      gen_ref_opt: '(opsional)',
+      review_manual_placeholder: 'Contoh: makalah_pendidikan.docx',
+      turnitin_text_placeholder: 'Tempel teks naskah...',
+      btn_do_auto_revise: 'Revisi Otomatis',
+      btn_copy_report: 'Salin',
+      turnitin_do_para_btn: 'Parafrase Otomatis',
+      btn_copy_turnitin: 'Salin',
+      ws_filter_all: 'Semua',
+      ws_filter_makalah: 'Makalah',
+      ws_filter_skripsi: 'Skripsi',
+      ws_filter_lit: 'Lit-Review',
+      ws_filter_presentasi: 'Presentasi',
+      ws_reload_btn: 'Muat Ulang',
+      chat_quick_title: 'Mulai Cepat Konsultasi',
+      chat_quick_sub: 'Klik salah satu topik di bawah untuk memulai diskusi.',
     },
     en: {
       nav_overview: 'Overview',
@@ -1576,6 +1592,22 @@
       modal_auth_verify_btn: 'Verify & Enter Studio',
       modal_auth_resend: 'Resend Code',
       modal_auth_change_email: 'Change Email Address',
+      gen_ref_label: 'Attached References',
+      gen_ref_opt: '(optional)',
+      review_manual_placeholder: 'Example: research_paper.docx',
+      turnitin_text_placeholder: 'Paste manuscript text...',
+      btn_do_auto_revise: 'Auto Revise',
+      btn_copy_report: 'Copy',
+      turnitin_do_para_btn: 'Auto Paraphrase',
+      btn_copy_turnitin: 'Copy',
+      ws_filter_all: 'All',
+      ws_filter_makalah: 'Paper',
+      ws_filter_skripsi: 'Thesis',
+      ws_filter_lit: 'Lit-Review',
+      ws_filter_presentasi: 'Slides',
+      ws_reload_btn: 'Reload',
+      chat_quick_title: 'Quick Consultation',
+      chat_quick_sub: 'Click any prompt below to begin discussing.',
     },
   };
 
@@ -1636,6 +1668,7 @@
     setOpt('taskType', 'lit-review', isEn ? 'Literature Review' : 'Tinjauan Pustaka');
     setOpt('taskType', 'presentasi', isEn ? 'Presentation Outline' : 'Kerangka Presentasi');
 
+    setOpt('citationStyle', 'apa', isEn ? 'APA 7th Edition' : 'APA Edisi ke-7');
     setOpt('chapterConfig', 'auto', isEn ? 'Complete Standard (Ch. I–V)' : 'Standar Lengkap (Bab I–V)');
     setOpt('chapterConfig', '4', isEn ? '4 Chapters + Abstract' : '4 Bab + Abstrak');
     setOpt('chapterConfig', '3', isEn ? '3 Brief Chapters' : '3 Bab Ringkas');
