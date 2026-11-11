@@ -1325,6 +1325,27 @@
     });
   }
 
+  function openContactModal() {
+    const modal = document.getElementById('contactModal');
+    if (modal) modal.style.display = 'flex';
+  }
+
+  function closeContactModal() {
+    const modal = document.getElementById('contactModal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  function copyFounderEmail(btn) {
+    navigator.clipboard.writeText('founder@tgsdork.com').then(() => {
+      notifyToast('Email founder@tgsdork.com berhasil disalin.', 'success');
+      if (btn) {
+        const orig = btn.textContent;
+        btn.textContent = 'Tersalin!';
+        setTimeout(() => { btn.textContent = orig; }, 1600);
+      }
+    });
+  }
+
 
   function setArchiveTypeFilter(type) {
     archiveTypeFilter = type || 'all';
@@ -1855,6 +1876,9 @@
       openDocReader,
       closeDocReader,
       copyReaderText,
+      openContactModal,
+      closeContactModal,
+      copyFounderEmail,
     };
 
     // Restore sidebar collapsed state if saved

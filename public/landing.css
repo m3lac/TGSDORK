@@ -1316,6 +1316,118 @@
   border-top: 1px solid var(--border);
 }
 
+/* Contact Section */
+.lp-contact-section {
+  padding: 80px 0 60px;
+  position: relative;
+}
+
+.lp-contact-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  margin-top: 32px;
+}
+
+.lp-contact-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 24px;
+  border-radius: 20px;
+  background: var(--bg-rail);
+  border: 1px solid var(--border);
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.lp-contact-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(56, 189, 248, 0.45);
+  box-shadow: 0 16px 36px -12px rgba(56, 189, 248, 0.15);
+}
+
+.lp-contact-card.instagram:hover {
+  border-color: rgba(244, 63, 94, 0.45);
+  box-shadow: 0 16px 36px -12px rgba(244, 63, 94, 0.18);
+}
+
+.lp-contact-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.lp-contact-icon.email {
+  color: var(--sky-vivid);
+  background: rgba(56, 189, 248, 0.08);
+  border-color: rgba(56, 189, 248, 0.25);
+}
+
+.lp-contact-icon.ig {
+  color: var(--pink-vivid);
+  background: rgba(244, 63, 94, 0.08);
+  border-color: rgba(244, 63, 94, 0.25);
+}
+
+.lp-contact-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.lp-contact-type {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-muted);
+}
+
+.lp-contact-val {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+  word-break: break-all;
+}
+
+.lp-contact-note {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink-secondary);
+  margin: 0;
+}
+
+.lp-contact-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sky-vivid);
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.lp-contact-card.instagram .lp-contact-action {
+  color: var(--pink-vivid);
+}
+
+@media (max-width: 720px) {
+  .lp-contact-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 /* Footer */
 .lp-footer {
   border-top: 1px solid var(--border);

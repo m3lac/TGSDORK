@@ -17,7 +17,7 @@ export function renderStudioHtml(devUiMode = false): string {
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/public/styles.css?v=20261110_03" />
+  <link rel="stylesheet" href="/public/styles.css?v=20261112_01" />
 </head>
 <body class="studio-body">
   <a href="#mainApp" class="skip-link">Lewati ke ruang kerja utama</a>
@@ -91,6 +91,12 @@ export function renderStudioHtml(devUiMode = false): string {
 
         <div class="sidebar-footer">
           <span class="sr-only" id="wsText">Terhubung</span>
+          <button type="button" class="rail-contact-btn" title="Kontak &amp; Hubungi Founder" aria-label="Kontak Founder" onclick="TGSDORK.openContactModal()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" />
+            </svg>
+            <span class="nav-label">Kontak</span>
+          </button>
           <button type="button" class="rail-exit-btn" title="Logout dari Studio" aria-label="Logout dari Studio" onclick="TGSDORK.logout()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" d="M15 4h4a2 2 0 012 2v12a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3" />
@@ -114,6 +120,10 @@ export function renderStudioHtml(devUiMode = false): string {
               <span class="user-avatar-orb" id="userAvatarInitials" aria-hidden="true">TG</span>
               <span class="user-chip-email" id="userEmailLabel">Akun</span>
             </div>
+            <button type="button" class="btn-pill btn-white sm" id="headerContactBtn" onclick="TGSDORK.openContactModal()" title="Hubungi Founder">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+              <span>Kontak</span>
+            </button>
             <button type="button" class="btn-pill btn-white sm" id="headerNewDocBtn" onclick="TGSDORK.switchNav('generate'); document.getElementById('topic')?.focus();">
               <span>+ Naskah Baru</span>
             </button>
@@ -231,6 +241,30 @@ export function renderStudioHtml(devUiMode = false): string {
                 <button type="button" class="action-btn" onclick="TGSDORK.switchNav('workspace')">Lihat Semua &rarr;</button>
               </div>
               <div id="ovRecentList"></div>
+            </div>
+
+            <div class="panel ov-contact-card" style="margin-top: 16px;">
+              <div class="ov-contact-row">
+                <div class="ov-contact-info">
+                  <div class="ov-quick-icon pink">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+                  </div>
+                  <div>
+                    <strong class="ov-contact-title">Hubungi Founder TGSDORK</strong>
+                    <span class="ov-contact-sub">Masukan fitur, kendala riset, atau kolaborasi langsung.</span>
+                  </div>
+                </div>
+                <div class="ov-contact-actions">
+                  <a href="mailto:founder@tgsdork.com" class="btn-pill btn-white sm">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><polyline points="3 7 12 13 21 7"/></svg>
+                    <span>founder@tgsdork.com</span>
+                  </a>
+                  <a href="https://instagram.com/nelosif_" target="_blank" rel="noopener noreferrer" class="btn-pill btn-hot-pink sm">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+                    <span>@nelosif_</span>
+                  </a>
+                </div>
+              </div>
             </div>
           </section>
 
@@ -796,10 +830,59 @@ export function renderStudioHtml(devUiMode = false): string {
     </div>
   </div>
 
+  <!-- CONTACT FOUNDER MODAL -->
+  <div class="auth-overlay" id="contactModal" role="dialog" aria-modal="true" aria-labelledby="contactModalTitle" style="display: none;" onclick="if(event.target===this)TGSDORK.closeContactModal()">
+    <div class="auth-card contact-modal-card">
+      <div class="auth-card-top">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="brand-orb sm"><img src="data:image/png;base64,${FAVICON_B64}" alt="Logo TGSDORK" /></span>
+          <span class="brand-name">TGSDORK</span>
+        </div>
+        <button type="button" class="icon-btn" aria-label="Tutup kontak" onclick="TGSDORK.closeContactModal()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <h2 id="contactModalTitle">Hubungi Founder</h2>
+      <p id="contactModalSubtitle">Punya pertanyaan, saran fitur, kerja sama riset, atau kendala? Hubungi langsung melalui kanal di bawah ini:</p>
+
+      <div class="contact-modal-list">
+        <div class="contact-modal-item">
+          <div class="contact-modal-item-left">
+            <div class="contact-modal-icon sky">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><polyline points="3 7 12 13 21 7"/></svg>
+            </div>
+            <div class="contact-modal-meta">
+              <span>Email Founder</span>
+              <strong>founder@tgsdork.com</strong>
+            </div>
+          </div>
+          <div class="contact-modal-btns">
+            <button type="button" class="btn-pill btn-white sm" onclick="TGSDORK.copyFounderEmail(this)">Salin</button>
+            <a href="mailto:founder@tgsdork.com" class="btn-pill btn-hot-pink sm">Kirim</a>
+          </div>
+        </div>
+
+        <div class="contact-modal-item">
+          <div class="contact-modal-item-left">
+            <div class="contact-modal-icon pink">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+            </div>
+            <div class="contact-modal-meta">
+              <span>Instagram</span>
+              <strong>@nelosif_</strong>
+            </div>
+          </div>
+          <a href="https://instagram.com/nelosif_" target="_blank" rel="noopener noreferrer" class="btn-pill btn-hot-pink sm">Buka IG</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="toastStack" class="toast-stack" aria-live="polite"></div>
 
   <script>window.__TGSDORK_DEV_UI__ = ${devUiMode ? 'true' : 'false'};</script>
-  <script src="/public/app.js?v=20261110_03"></script>
+  <script src="/public/app.js?v=20261112_01"></script>
 </body>
 </html>`;
 }

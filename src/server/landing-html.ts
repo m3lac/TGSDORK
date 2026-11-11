@@ -37,8 +37,8 @@ export function renderLandingHtml(devUiMode = false): string {
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/public/styles.css" />
-  <link rel="stylesheet" href="/public/landing.css" />
+  <link rel="stylesheet" href="/public/styles.css?v=20261112_01" />
+  <link rel="stylesheet" href="/public/landing.css?v=20261112_01" />
 </head>
 <body class="landing-body">
   <a href="#mainLanding" class="skip-link" data-i18n="skip_link">Skip to main content</a>
@@ -58,6 +58,7 @@ export function renderLandingHtml(devUiMode = false): string {
         <a href="#alur" data-i18n="nav_pipeline">Pipeline</a>
         <a href="#contoh" data-i18n="nav_samples">Output</a>
         <a href="#compare" data-i18n="nav_compare">Why TGSDORK</a>
+        <a href="#contact" data-i18n="nav_contact">Contact</a>
       </nav>
 
       <div class="lp-nav-actions">
@@ -453,6 +454,51 @@ export function renderLandingHtml(devUiMode = false): string {
         </div>
       </div>
     </section>
+
+    <!-- CONTACT SECTION -->
+    <section id="contact" class="lp-contact-section">
+      <div class="lp-container">
+        <div class="lp-section-head">
+          <div>
+            <span class="lp-eyebrow" data-i18n="contact_eyebrow">GET IN TOUCH</span>
+            <h2 data-i18n="contact_heading">Contact &amp; Founder</h2>
+          </div>
+          <p class="lp-section-sub" data-i18n="contact_sub">Have questions, feedback, partnership inquiries, or research challenges? Reach out directly.</p>
+        </div>
+
+        <div class="lp-contact-grid">
+          <a href="mailto:founder@tgsdork.com" class="lp-contact-card">
+            <div class="lp-contact-icon email">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><polyline points="3 7 12 13 21 7"/></svg>
+            </div>
+            <div class="lp-contact-info">
+              <span class="lp-contact-type" data-i18n="contact_email_label">Official Founder Email</span>
+              <strong class="lp-contact-val">founder@tgsdork.com</strong>
+              <p class="lp-contact-note" data-i18n="contact_email_note">Direct inbox for inquiries, enterprise access, and research collaboration.</p>
+            </div>
+            <span class="lp-contact-action">
+              <span data-i18n="contact_email_btn">Send Email</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17L17 7M9 7h8v8"/></svg>
+            </span>
+          </a>
+
+          <a href="https://instagram.com/nelosif_" target="_blank" rel="noopener noreferrer" class="lp-contact-card instagram">
+            <div class="lp-contact-icon ig">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+            </div>
+            <div class="lp-contact-info">
+              <span class="lp-contact-type" data-i18n="contact_ig_label">Founder Instagram</span>
+              <strong class="lp-contact-val">@nelosif_</strong>
+              <p class="lp-contact-note" data-i18n="contact_ig_note">Connect directly on Instagram for product updates, discussions, and quick DMs.</p>
+            </div>
+            <span class="lp-contact-action">
+              <span data-i18n="contact_ig_btn">Follow &amp; DM</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17L17 7M9 7h8v8"/></svg>
+            </span>
+          </a>
+        </div>
+      </div>
+    </section>
   </main>
 
   <footer class="lp-footer">
@@ -469,12 +515,14 @@ export function renderLandingHtml(devUiMode = false): string {
         <a href="/studio?tab=turnitin" data-i18n="foot_turnitin">Similarity</a>
         <a href="/studio?tab=pptx" data-i18n="foot_pptx">PowerPoint</a>
         <a href="/studio?tab=workspace" data-i18n="foot_archive">Archive</a>
+        <a href="mailto:founder@tgsdork.com">founder@tgsdork.com</a>
+        <a href="https://instagram.com/nelosif_" target="_blank" rel="noopener noreferrer">@nelosif_</a>
       </div>
     </div>
   </footer>
 
   <script>window.__TGSDORK_DEV_UI__ = ${devUiMode ? 'true' : 'false'};</script>
-  <script src="/public/landing.js" defer></script>
+  <script src="/public/landing.js?v=20261112_01" defer></script>
 </body>
 </html>`;
 }
