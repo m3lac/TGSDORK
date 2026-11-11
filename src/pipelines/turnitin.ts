@@ -48,7 +48,7 @@ export function normalizeAcademicManuscript(rawText: string, fallbackTitle = '')
     const cleanNoH = line.replace(/^#{1,6}\s+/, '').replace(/\*\*/g, '').trim();
 
     // BAB X alone followed by chapter title on next line
-    const babAloneMatch = cleanNoH.match(/^(BAB\s+[0-9IVX]+|BAGIAN\s+[0-9IVX]+)$/i);
+    const babAloneMatch = cleanNoH.match(/^(BAB\s+[0-9IVX]+|BAGIAN\s+[0-9IVX]+)\s*[:.-]?\s*$/i);
     if (babAloneMatch) {
       const babNum = babAloneMatch[1].toUpperCase();
       let nextTitle = '';
@@ -66,26 +66,46 @@ export function normalizeAcademicManuscript(rawText: string, fallbackTitle = '')
           i = j;
         }
       }
-      if (nextTitle) {
-        cleanedLines.push(`\n---\n\n## ${babNum}: ${nextTitle}\n`);
-      } else {
-        cleanedLines.push(`\n---\n\n## ${babNum}\n`);
+      if (!nextTitle) {
+        const roman = babNum.replace(/^(?:BAB|BAGIAN)\s+/i, '').trim();
+        if (roman === 'I' || roman === '1') nextTitle = 'PENDAHULUAN';
+        else if (roman === 'II' || roman === '2') nextTitle = 'TINJAUAN PUSTAKA';
+        else if (roman === 'III' || roman === '3') nextTitle = 'METODE PENELITIAN';
+        else if (roman === 'IV' || roman === '4') nextTitle = 'HASIL DAN PEMBAHASAN';
+        else if (roman === 'V' || roman === '5') nextTitle = 'PENUTUP';
+        else nextTitle = 'PEMBAHASAN';
       }
+      cleanedLines.push(`\n---\n\n## ${babNum}: ${nextTitle}\n`);
       continue;
     }
 
     // BAB X: TITLE
-    const fullBabMatch = cleanNoH.match(/^(BAB\s+[0-9IVX]+|BAGIAN\s+[0-9IVX]+)\s*[:.-]\s*(.+)$/i);
+    const fullBabMatch = cleanNoH.match(/^(BAB\s+[0-9IVX]+|BAGIAN\s+[0-9IVX]+)\s*[:.-]\s*(.*)$/i);
     if (fullBabMatch) {
       const babNum = fullBabMatch[1].toUpperCase();
-      const babTitle = fullBabMatch[2].trim().toUpperCase();
+      let babTitle = fullBabMatch[2].trim().toUpperCase();
+      if (!babTitle || babTitle === ':') {
+        const roman = babNum.replace(/^(?:BAB|BAGIAN)\s+/i, '').trim();
+        if (roman === 'I' || roman === '1') babTitle = 'PENDAHULUAN';
+        else if (roman === 'II' || roman === '2') babTitle = 'TINJAUAN PUSTAKA';
+        else if (roman === 'III' || roman === '3') babTitle = 'METODE PENELITIAN';
+        else if (roman === 'IV' || roman === '4') babTitle = 'HASIL DAN PEMBAHASAN';
+        else if (roman === 'V' || roman === '5') babTitle = 'PENUTUP';
+        else babTitle = 'PEMBAHASAN';
+      }
       cleanedLines.push(`\n---\n\n## ${babNum}: ${babTitle}\n`);
+      continue;
+    }
+
+    // English Abstract preservation
+    if (/^\*{1,3}abstract\*{1,3}/i.test(line)) {
+      cleanedLines.push(line);
       continue;
     }
 
     // Standalone chapters
     const standaloneMatch = cleanNoH.match(
-      /^(ABSTRAK|ABSTRACT|DAFTAR PUSTAKA|REFERENSI|BIBLIOGRAPHY|KATA PENGANTAR|LAMPIRAN)$/i
+      /^(ABSTRAK|DAFTAR PUSTAKA|REFERENSI|BIBLIOGRAPHY|KATA PENGANTAR|LAMPIRAN)$/i
     );
     if (standaloneMatch) {
       cleanedLines.push(`\n---\n\n## ${standaloneMatch[1].toUpperCase()}\n`);
@@ -433,6 +453,7 @@ PERINTAH REKONSTRUKSI & PARAFRASE AKADEMIK (WAJIB LOLOS TURNITIN):
 5. FORMAT & TATA LETAK DOKUMEN AKADEMIK STANDAR DIKTI:
    - Judul Dokumen di baris teratas: "# JUDUL NASKAH (HURUF BESAR)"
    - Subjudul di baris kedua: "*Jenis Dokumen: NASKAH AKADEMIK | Standar Format Baku*"
+   - Jika naskah memiliki Abstrak, letakkan langsung di bawah subjudul dengan judul "## ABSTRAK".
    - Setiap bab utama WAJIB satu baris format H2: "## BAB I: PENDAHULUAN", "## BAB II: TINJAUAN PUSTAKA...", "## BAB III: METODE PENELITIAN...", "## BAB IV: HASIL DAN PEMBAHASAN...", "## BAB V: PENUTUP", "## DAFTAR PUSTAKA"
    - DILARANG memecah nomor bab dan judul bab menjadi dua baris terpisah ("### BAB II" lalu "### METODE"). Wajib ditulis dalam satu baris: "## BAB II: METODE...".
    - Sub-bab wajib berformat H3: "### 1.1 Latar Belakang Masalah", dst.

@@ -58,7 +58,15 @@ function parseChapterHeading(raw: string): { isChapter: boolean; isAbstrak: bool
   const chapMatch = cleaned.match(/^(BAB\s+[0-9IVX]+|BAGIAN\s+[0-9IVX]+|CHAPTER\s+[0-9IVX]+)\s*[:.-]?\s*(.*)$/i);
   if (chapMatch) {
     const num = chapMatch[1].toUpperCase();
-    const rest = chapMatch[2].trim().toUpperCase();
+    let rest = chapMatch[2].trim().toUpperCase();
+    if (!rest || rest === ':' || rest === num) {
+      const roman = num.replace(/^(?:BAB|BAGIAN|CHAPTER)\s+/i, '').trim();
+      if (roman === 'I' || roman === '1') rest = 'PENDAHULUAN';
+      else if (roman === 'II' || roman === '2') rest = 'TINJAUAN PUSTAKA';
+      else if (roman === 'III' || roman === '3') rest = 'METODE PENELITIAN';
+      else if (roman === 'IV' || roman === '4') rest = 'HASIL DAN PEMBAHASAN';
+      else if (roman === 'V' || roman === '5') rest = 'PENUTUP';
+    }
     return { isChapter: true, isAbstrak: false, num, title: rest || num };
   }
   if (
@@ -75,7 +83,7 @@ function parseChapterHeading(raw: string): { isChapter: boolean; isAbstrak: bool
   return { isChapter: false, isAbstrak: false, title: cleaned };
 }
 
-function markdownToCleanHtml(docTitle: string, markdown: string, font: string = 'Times New Roman'): string {
+export function markdownToCleanHtml(docTitle: string, markdown: string, font: string = 'Times New Roman'): string {
   // 1. Convert markdown tables to styled HTML tables with thead/tbody & keep-together
   const withTables = markdown.replace(/(?:^\|.*\|\s*$\n?){2,}/gm, (tableBlock) => {
     const lines = tableBlock.trim().split('\n').map((l) => l.trim()).filter(Boolean);
@@ -122,6 +130,21 @@ function markdownToCleanHtml(docTitle: string, markdown: string, font: string = 
   let inOl = false;
   let seenTitle = false;
   let seenFirstChapter = false;
+  let seenAbstrak = false;
+  // If markdown text doesn't contain a top-level H1 title, prepend document title at top
+  if (!/^#\s+[^\n]+/m.test(markdown) && docTitle) {
+    const cleanTitle = docTitle
+      .replace(/_(?:revisi|review|turnitin_pass)+$/gi, '')
+      .replace(/^(?:makalah|skripsi|presentasi|lit-review)-/i, '')
+      .replace(/-[0-9a-f]{6}$/i, '')
+      .replace(/[_-]+/g, ' ')
+      .trim();
+    if (cleanTitle) {
+      htmlParts.push(`<h1 class="paper-title">${formatInlineHtml(cleanTitle.toUpperCase())}</h1>`);
+      htmlParts.push(`<p class="paper-subtitle no-indent">Jenis Dokumen: NASKAH AKADEMIK | Standar Format Baku</p>`);
+      seenTitle = true;
+    }
+  }
 
   const closeLists = () => {
     if (inUl) { htmlParts.push('</ul>'); inUl = false; }
@@ -164,6 +187,12 @@ function markdownToCleanHtml(docTitle: string, markdown: string, font: string = 
       const chapInfo = parseChapterHeading(headingText);
       if (chapInfo.isChapter) {
         if (chapInfo.isAbstrak) {
+          seenFirstChapter = true;
+          if (seenAbstrak) {
+            htmlParts.push(`<p class="no-indent keywords"><em>${formatInlineHtml(headingText)}</em></p>`);
+            continue;
+          }
+          seenAbstrak = true;
           htmlParts.push(
             `<h2 class="chapter-heading abstrak-heading"><span class="chapter-title">ABSTRAK</span></h2>`
           );
@@ -189,7 +218,7 @@ function markdownToCleanHtml(docTitle: string, markdown: string, font: string = 
           }
         }
 
-        const shouldBreak = seenFirstChapter || seenTitle;
+        const shouldBreak = seenFirstChapter && !chapInfo.isAbstrak;
         seenFirstChapter = true;
         const breakClass = shouldBreak ? ' page-break' : '';
 
@@ -227,6 +256,12 @@ function markdownToCleanHtml(docTitle: string, markdown: string, font: string = 
       closeLists();
       const chapInfo = parseChapterHeading(line);
       if (chapInfo.isAbstrak) {
+        seenFirstChapter = true;
+        if (seenAbstrak) {
+          htmlParts.push(`<p class="no-indent keywords"><em>${formatInlineHtml(line)}</em></p>`);
+          continue;
+        }
+        seenAbstrak = true;
         htmlParts.push(`<h2 class="chapter-heading abstrak-heading"><span class="chapter-title">ABSTRAK</span></h2>`);
         continue;
       }
@@ -250,7 +285,7 @@ function markdownToCleanHtml(docTitle: string, markdown: string, font: string = 
         }
       }
 
-      const shouldBreak = seenFirstChapter || seenTitle;
+      const shouldBreak = seenFirstChapter && !chapInfo.isAbstrak;
       seenFirstChapter = true;
       const breakClass = shouldBreak ? ' page-break' : '';
       if (chapInfo.num && chapterTitle && chapterTitle !== chapInfo.num) {

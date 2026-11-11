@@ -406,8 +406,16 @@ function ensureCompleteAcademicStructure(sections: DocumentSection[]): DocumentS
     let babIdx = 0;
     for (const sec of body) {
       if (/^(?:abstrak|abstract)\b/i.test(sec.title.trim())) continue;
-      const cleanLabel = sec.title.replace(/^BAB(?:\s+[IVX0-9]+)?\s*[:.-]?\s*/i, '').trim();
+      let cleanLabel = sec.title.replace(/^BAB(?:\s+[IVX0-9]+)?\s*[:.-]?\s*/i, '').trim();
       const roman = ROMAN_NUMERALS[babIdx] || String(babIdx + 1);
+      if (!cleanLabel) {
+        if (roman === 'I') cleanLabel = 'PENDAHULUAN';
+        else if (roman === 'II') cleanLabel = 'TINJAUAN PUSTAKA';
+        else if (roman === 'III') cleanLabel = 'METODE PENELITIAN';
+        else if (roman === 'IV') cleanLabel = 'HASIL DAN PEMBAHASAN';
+        else if (roman === 'V') cleanLabel = 'PENUTUP';
+        else cleanLabel = 'PEMBAHASAN';
+      }
       sec.title = `BAB ${roman}: ${cleanLabel.toUpperCase()}`;
       babIdx++;
     }

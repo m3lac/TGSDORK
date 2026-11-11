@@ -38,7 +38,15 @@ function splitChapterHeading(raw: string): { isChapter: boolean; isAbstrak: bool
   const chapMatch = cleaned.match(/^(BAB\s+[0-9IVX]+|BAGIAN\s+[0-9IVX]+|CHAPTER\s+[0-9IVX]+)\s*[:.-]?\s*(.*)$/i);
   if (chapMatch) {
     const num = chapMatch[1].toUpperCase();
-    const rest = chapMatch[2].trim().toUpperCase();
+    let rest = chapMatch[2].trim().toUpperCase();
+    if (!rest || rest === ':' || rest === num) {
+      const roman = num.replace(/^(?:BAB|BAGIAN|CHAPTER)\s+/i, '').trim();
+      if (roman === 'I' || roman === '1') rest = 'PENDAHULUAN';
+      else if (roman === 'II' || roman === '2') rest = 'TINJAUAN PUSTAKA';
+      else if (roman === 'III' || roman === '3') rest = 'METODE PENELITIAN';
+      else if (roman === 'IV' || roman === '4') rest = 'HASIL DAN PEMBAHASAN';
+      else if (roman === 'V' || roman === '5') rest = 'PENUTUP';
+    }
     return { isChapter: true, isAbstrak: false, num, title: rest || num };
   }
   if (
@@ -195,6 +203,7 @@ function normalizeMarkdownBlocks(md: string): string[] {
   let buffer: string[] = [];
   let inTable = false;
   let inCode = false;
+  let seenAbstrak = false;
 
   const flush = () => {
     if (buffer.length > 0) {
@@ -248,6 +257,22 @@ function normalizeMarkdownBlocks(md: string): string[] {
     }
 
     if (
+      /^(?:\*{1,3}(?:Kata Kunci|Keywords|Abstract|Catatan)|Kata Kunci\s*:|Keywords\s*:)/i.test(
+        trimmed
+      )
+    ) {
+      flush();
+      blocks.push(trimmed);
+      continue;
+    }
+
+    if (seenAbstrak && /^(?:\*{0,3}abstract\*{0,3}\b)/i.test(trimmed) && trimmed.length < 50) {
+      flush();
+      blocks.push(trimmed.startsWith('*') ? trimmed : `*${trimmed}*`);
+      continue;
+    }
+
+    if (
       /^(?:bab\s+[0-9ivx]+|bagian\s+[0-9ivx]+|daftar\s+pustaka|abstrak|abstract|kata\s+pengantar|lampiran|pendahuluan|tinjauan\s+pustaka|landasan\s+teori|metode\s+penelitian|metodologi|hasil\s+dan\s+pembahasan|kesimpulan|penutup|simpulan)\b/i.test(
         trimmed
       ) &&
@@ -255,10 +280,10 @@ function normalizeMarkdownBlocks(md: string): string[] {
       !/[.,;]$/.test(trimmed)
     ) {
       flush();
+      if (/^(?:abstrak|abstract)\b/i.test(trimmed)) seenAbstrak = true;
       blocks.push(`## ${trimmed}`);
       continue;
     }
-
     if (/^(?:[-*]|\d+\.)\s+/.test(trimmed)) {
       flush();
       blocks.push(trimmed);
@@ -403,7 +428,7 @@ function pushMarkdownBlocks(
             idx++;
           }
         }
-        const shouldBreak = Boolean(opts.allowChapterBreak) && (!chapInfo.isAbstrak || seenFirstChapter);
+        const shouldBreak = Boolean(opts.allowChapterBreak) && seenFirstChapter && !chapInfo.isAbstrak;
         seenFirstChapter = true;
         target.push(...buildChapterParagraphs(headingToBuild, font, shouldBreak));
         continue;
@@ -499,7 +524,7 @@ export async function exportToDocx(state: TaskState, customFont?: string): Promi
   for (let sIdx = 0; sIdx < state.sections.length; sIdx++) {
     const sec = state.sections[sIdx];
     const chapInfo = splitChapterHeading(sec.title);
-    const shouldBreak = (chapInfo.isChapter && !chapInfo.isAbstrak) || (sIdx === 0 && Boolean(state.cover) && !chapInfo.isAbstrak);
+    const shouldBreak = sIdx > 0 && chapInfo.isChapter && !chapInfo.isAbstrak;
 
     paragraphs.push(...buildChapterParagraphs(sec.title, font, shouldBreak));
 
