@@ -12,7 +12,7 @@
     "dev:ui": "TGSDORK_DEV_UI=1 tsx watch src/index.ts serve --port 3456",
     "build": "tsup src/index.ts --format esm --dts --clean",
     "typecheck": "tsc --noEmit",
-    "test": "tsx src/core/test_phase1.ts && tsx src/dorker/test_phase2.ts && tsx src/dorker/test_browser.ts && tsx src/test_e2e.ts"
+    "test": "tsx src/core/test_phase1.ts && tsx src/dorker/test_phase2.ts && tsx src/dorker/test_browser.ts && tsx src/pipelines/test_turnitin.ts && tsx src/test_e2e.ts"
   },
   "dependencies": {
     "@clack/prompts": "^0.9.1",

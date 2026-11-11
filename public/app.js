@@ -648,37 +648,244 @@
     document.getElementById('turnitinText').value = '';
   }
 
+  let currentTurnitinMode = 'doc';
+  let currentTurnitinSourceFilter = 'all';
+
+  function setTurnitinDisplayMode(mode) {
+    currentTurnitinMode = mode;
+    const btnDoc = document.getElementById('btnTurnitinViewDoc');
+    const btnText = document.getElementById('btnTurnitinViewText');
+    const dualView = document.getElementById('turnitinViewerDual');
+    const repContent = document.getElementById('turnitinReportContent');
+
+    if (mode === 'doc') {
+      if (btnDoc) btnDoc.classList.add('active');
+      if (btnText) btnText.classList.remove('active');
+      if (dualView) dualView.style.display = 'grid';
+      if (repContent) repContent.style.display = 'none';
+    } else {
+      if (btnDoc) btnDoc.classList.remove('active');
+      if (btnText) btnText.classList.add('active');
+      if (dualView) dualView.style.display = 'none';
+      if (repContent) repContent.style.display = 'block';
+    }
+  }
+
+  function filterTurnitinSources(filterType) {
+    currentTurnitinSourceFilter = filterType;
+    const chips = document.querySelectorAll('.t-filter-chip');
+    chips.forEach((c) => {
+      if (c.getAttribute('data-src-filter') === filterType) {
+        c.classList.add('active');
+      } else {
+        c.classList.remove('active');
+      }
+    });
+
+    const cards = document.querySelectorAll('.turnitin-source-card');
+    cards.forEach((c) => {
+      const type = c.getAttribute('data-source-type');
+      if (filterType === 'all' || type === filterType) {
+        c.style.display = 'flex';
+      } else {
+        c.style.display = 'none';
+      }
+    });
+  }
+
+  function toggleTurnitinSourcesPane() {
+    const dual = document.getElementById('turnitinViewerDual');
+    const btn = document.getElementById('btnToggleSourcesPane');
+    if (!dual) return;
+    const isCollapsed = dual.classList.toggle('sources-collapsed');
+    if (btn) {
+      btn.textContent = isCollapsed ? 'Tampilkan Sumber' : 'Sembunyikan Sumber';
+    }
+  }
+
+  function resetTurnitinView() {
+    const container = document.getElementById('turnitinContainer');
+    if (container) container.classList.remove('has-result');
+    const backBtn = document.getElementById('btnTurnitinBackToResult');
+    if (backBtn && lastTurnitinState) backBtn.style.display = 'inline-flex';
+  }
+
+  function showLastTurnitinResult() {
+    const container = document.getElementById('turnitinContainer');
+    if (container && lastTurnitinState) container.classList.add('has-result');
+  }
+
+  function focusTurnitinSource(sourceId) {
+    const cards = document.querySelectorAll('.turnitin-source-card');
+    cards.forEach((c) => {
+      if (c.getAttribute('data-source-id') === String(sourceId)) {
+        c.classList.add('active');
+        c.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      } else {
+        c.classList.remove('active');
+      }
+    });
+
+    const marks = document.querySelectorAll('.turnitin-mark');
+    let firstFound = null;
+    marks.forEach((m) => {
+      if (m.getAttribute('data-source-id') === String(sourceId)) {
+        m.classList.add('highlight-active');
+        if (!firstFound) firstFound = m;
+      } else {
+        m.classList.remove('highlight-active');
+      }
+    });
+
+    if (firstFound) {
+      firstFound.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+
   function renderTurnitinResult(d) {
-    lastTurnitinState = { filename: d.filename, text: d.text, report: d.result };
+    lastTurnitinState = {
+      filename: d.filename,
+      text: d.text,
+      report: d.result,
+      sources: d.sources,
+      annotatedHtml: d.annotatedHtml,
+    };
+
     document.getElementById('turnitinReportContent').innerHTML = renderMarkdownToHtml(d.result);
 
     const sim = Number(d.similarityScore || 0);
     const ai = Number(d.aiScore || 0);
     const simBadge = document.getElementById('simScoreBadge');
     const simNote = document.getElementById('simStatusBadge');
-    simBadge.textContent = sim + '%';
-    if (sim < 20) {
-      simBadge.style.color = 'var(--sky-ink)';
-      simNote.textContent = 'Di bawah batas kemiripan 20%';
-    } else if (sim <= 30) {
-      simBadge.style.color = 'var(--warning)';
-      simNote.textContent = 'Sedang — disarankan parafrase';
-    } else {
-      simBadge.style.color = 'var(--pink-cta)';
-      simNote.textContent = 'Tinggi — wajib parafrase ulang';
+    if (simBadge) {
+      simBadge.textContent = sim + '%';
+      if (sim < 20) {
+        simBadge.style.color = 'var(--sky-ink)';
+        if (simNote) simNote.textContent = 'Di bawah batas kemiripan 20%';
+      } else if (sim <= 30) {
+        simBadge.style.color = 'var(--warning)';
+        if (simNote) simNote.textContent = 'Sedang — disarankan parafrase';
+      } else {
+        simBadge.style.color = 'var(--pink-cta)';
+        if (simNote) simNote.textContent = 'Tinggi — wajib parafrase ulang';
+      }
     }
+
+    const mb = d.metricsBreakdown || { internetSources: 0, studentPapers: 0, publications: 0 };
+    const elInternet = document.getElementById('simInternetBadge');
+    const elPub = document.getElementById('simPubBadge');
+    const elStudent = document.getElementById('simStudentBadge');
+    if (elInternet) elInternet.textContent = mb.internetSources + '%';
+    if (elPub) elPub.textContent = mb.publications + '%';
+    if (elStudent) elStudent.textContent = mb.studentPapers + '%';
+
+    const legInternet = document.getElementById('legInternetPct');
+    const legPub = document.getElementById('legPubPct');
+    const legStudent = document.getElementById('legStudentPct');
+    if (legInternet) legInternet.textContent = mb.internetSources + '%';
+    if (legPub) legPub.textContent = mb.publications + '%';
+    if (legStudent) legStudent.textContent = mb.studentPapers + '%';
+
+    const totalSim = Math.max(1, sim);
+    const catBar = document.getElementById('turnitinCategoryBar');
+    const catLegend = document.getElementById('turnitinCategoryLegend');
+    const segInt = document.getElementById('catSegInternet');
+    const segPub = document.getElementById('catSegPub');
+    const segStu = document.getElementById('catSegStudent');
+
+    if (segInt) segInt.style.width = Math.min(100, Math.round((mb.internetSources / totalSim) * 100)) + '%';
+    if (segPub) segPub.style.width = Math.min(100, Math.round((mb.publications / totalSim) * 100)) + '%';
+    if (segStu) segStu.style.width = Math.min(100, Math.round((mb.studentPapers / totalSim) * 100)) + '%';
+    if (catBar) catBar.style.display = 'flex';
+    if (catLegend) catLegend.style.display = 'flex';
 
     const aiBadge = document.getElementById('aiScoreBadge');
     const aiNote = document.getElementById('aiStatusBadge');
-    aiBadge.textContent = ai + '%';
-    if (ai < 15) {
-      aiBadge.style.color = 'var(--sky-ink)';
-      aiNote.textContent = 'Variasi kalimat alami';
-    } else {
-      aiBadge.style.color = 'var(--pink-cta)';
-      aiNote.textContent = 'Pola kalimat monoton terdeteksi';
+    if (aiBadge) aiBadge.textContent = ai + '%';
+    if (aiNote) {
+      if (ai < 15) {
+        if (aiBadge) aiBadge.style.color = 'var(--sky-ink)';
+        aiNote.textContent = 'Variasi alami';
+      } else {
+        if (aiBadge) aiBadge.style.color = 'var(--pink-cta)';
+        aiNote.textContent = 'Pola monoton';
+      }
     }
 
+    const docEl = document.getElementById('turnitinAnnotatedDoc');
+    const sourcesListEl = document.getElementById('turnitinSourcesList');
+    const sourcesCountEl = document.getElementById('turnitinSourcesCount');
+    const viewSwitch = document.getElementById('turnitinViewSwitch');
+
+    if (d.annotatedHtml && docEl) {
+      docEl.innerHTML = d.annotatedHtml;
+      docEl.querySelectorAll('mark.turnitin-mark').forEach((m) => {
+        m.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const sid = m.getAttribute('data-source-id');
+          if (sid) focusTurnitinSource(sid);
+        });
+      });
+    }
+
+    const sources = Array.isArray(d.sources) ? d.sources : [];
+    if (sourcesCountEl) {
+      sourcesCountEl.textContent = sources.length + ' Sumber';
+    }
+
+    if (sourcesListEl) {
+      if (sources.length === 0) {
+        sourcesListEl.innerHTML =
+          '<div style="font-size:12px;color:var(--ink-muted);padding:14px 6px;">Tidak ditemukan kecocokan kalimat verbatim di repositori mahasiswa, jurnal ilmiah, maupun internet.</div>';
+      } else {
+        sourcesListEl.innerHTML = sources
+          .map((s) => {
+            const instLabel = s.institution || s.domain || (s.type === 'publication' ? 'Jurnal Ilmiah' : s.type === 'student_paper' ? 'Repositori Kampus' : 'Sumber Web');
+            const domainSub = s.domain && s.domain !== s.institution ? s.domain : '';
+            const actionLinkHtml = s.url
+              ? `<a href="${escapeHtml(s.url)}" target="_blank" rel="noopener noreferrer" class="turnitin-source-link-btn" onclick="event.stopPropagation()">Buka Tautan &nearr;</a>`
+              : `<span style="font-size:10px;color:var(--ink-muted);">Korpus Mahasiswa</span>`;
+
+            let metaDetail = '';
+            if (s.year) metaDetail += `(${s.year}) &bull; `;
+            metaDetail += `${s.matchCount || 1} kalimat cocok`;
+            if (domainSub) metaDetail += ` &bull; ${escapeHtml(domainSub)}`;
+
+            return `
+              <div class="turnitin-source-card" data-source-id="${s.id}" data-source-type="${s.type}" onclick="TGSDORK.focusTurnitinSource(${s.id})">
+                <div class="turnitin-source-card-top">
+                  <div class="turnitin-card-badge-group">
+                    <span class="turnitin-source-num-badge" style="background-color: ${s.color};">${s.id}</span>
+                    <span class="turnitin-source-domain-pill" title="${escapeHtml(instLabel)} (${escapeHtml(s.domain || '')})">${escapeHtml(instLabel)}</span>
+                  </div>
+                  <span class="turnitin-source-pct">${s.similarityPercent}%</span>
+                </div>
+                <div class="turnitin-source-title" title="${escapeHtml(s.title)}">${escapeHtml(s.title)}</div>
+                <div class="turnitin-source-meta">
+                  <div class="turnitin-card-meta-left">
+                    <span class="turnitin-type-pill ${s.type}">${escapeHtml(s.typeLabel)}</span>
+                    <span class="turnitin-match-count-text">${metaDetail}</span>
+                  </div>
+                  ${actionLinkHtml}
+                </div>
+              </div>
+            `;
+          })
+          .join('');
+      }
+    }
+
+    const container = document.getElementById('turnitinContainer');
+    if (container) container.classList.add('has-result');
+    const btnNewScan = document.getElementById('btnTurnitinNewScan');
+    if (btnNewScan) btnNewScan.style.display = 'inline-flex';
+    const btnToggleSources = document.getElementById('btnToggleSourcesPane');
+    if (btnToggleSources) btnToggleSources.style.display = 'inline-flex';
+    const docFilename = document.getElementById('turnitinDocFilename');
+    if (docFilename) docFilename.textContent = `Naskah: ${d.filename || 'Naskah_Input'}`;
+
+    if (viewSwitch) viewSwitch.style.display = 'inline-flex';
+    setTurnitinDisplayMode('doc');
     document.getElementById('turnitinReportArea').style.display = 'block';
   }
 
@@ -696,7 +903,15 @@
     btn.disabled = true;
     btn.textContent = 'Memindai kemiripan naskah...';
     banner.style.display = 'none';
-    document.getElementById('turnitinReportContent').innerHTML = '<p style="color:var(--ink-muted);margin:0;">Sedang memindai proporsi kemiripan dan pola kalimat...</p>';
+    const dualView = document.getElementById('turnitinViewerDual');
+    if (dualView) dualView.style.display = 'none';
+    const viewSwitch = document.getElementById('turnitinViewSwitch');
+    if (viewSwitch) viewSwitch.style.display = 'none';
+    const repContent = document.getElementById('turnitinReportContent');
+    if (repContent) {
+      repContent.style.display = 'block';
+      repContent.innerHTML = '<p style="color:var(--ink-muted);margin:0;">Sedang memindai kemiripan terhadap korpus naskah mahasiswa, repositori kampus, dan jurnal ilmiah...</p>';
+    }
     try {
       let payload;
       if (uploadedTurnitinFile) {
@@ -706,6 +921,10 @@
         payload = { filename: 'Naskah_Input.txt', text: textManual };
       }
 
+      const chkBib = document.getElementById('chkTurnitinExcludeBib');
+      const chkQuotes = document.getElementById('chkTurnitinExcludeQuotes');
+      payload.excludeBibliography = chkBib ? chkBib.checked : true;
+      payload.excludeQuotes = chkQuotes ? chkQuotes.checked : false;
       const res = await fetch('/api/turnitin/scan', {
         method: 'POST',
         headers: {
@@ -1617,6 +1836,12 @@
       triggerAuditAutoRevise,
       copyReportText,
       executeTurnitinScan,
+      setTurnitinDisplayMode,
+      filterTurnitinSources,
+      toggleTurnitinSourcesPane,
+      resetTurnitinView,
+      showLastTurnitinResult,
+      focusTurnitinSource,
       triggerTurnitinParaphrase,
       copyTurnitinReport,
       loadWorkspaceTasks,

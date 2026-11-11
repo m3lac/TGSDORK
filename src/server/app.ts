@@ -939,6 +939,8 @@ export function startServer(port = 3456): void {
             filename?: string;
             data?: string;
             text?: string;
+            excludeBibliography?: boolean;
+            excludeQuotes?: boolean;
           };
           let text = parsed.text || '';
           const filename = parsed.filename || 'naskah.txt';
@@ -965,7 +967,10 @@ export function startServer(port = 3456): void {
             throw new Error('Naskah kosong atau tidak dapat dibaca.');
           }
 
-          const scan = await scanTurnitinWithGemini(filename, text);
+          const scan = await scanTurnitinWithGemini(filename, text, {
+            excludeBibliography: parsed.excludeBibliography,
+            excludeQuotes: parsed.excludeQuotes,
+          });
           finishJob(scanJobId, `Skor kemiripan: ${scan.similarityScore}% (Indeks AI ${scan.aiScore}%).`);
 
           res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -977,6 +982,10 @@ export function startServer(port = 3456): void {
               aiScore: scan.aiScore,
               text,
               filename,
+              sources: scan.sources || [],
+              annotatedHtml: scan.annotatedHtml || '',
+              metricsBreakdown: scan.metricsBreakdown,
+              flaggedSentences: scan.flaggedSentences || [],
             })
           );
         } catch (err) {

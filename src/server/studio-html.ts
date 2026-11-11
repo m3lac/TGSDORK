@@ -500,12 +500,12 @@ export function renderStudioHtml(devUiMode = false): string {
 
           <!-- VIEW 4: UJI KEMIRIPAN -->
           <section id="tab-turnitin" style="display: none;">
-            <div class="studio-split">
-              <div class="panel">
+            <div class="turnitin-container" id="turnitinContainer">
+              <div class="panel turnitin-input-panel" id="turnitinInputPanel">
                 <div class="panel-header">
                   <div>
                     <div class="panel-title">Uji Kemiripan &amp; Parafrase</div>
-                    <div class="panel-subtitle">Ukur proporsi kemiripan dan tulis ulang kalimat terdeteksi tanpa mengubah makna ilmiah.</div>
+                    <div class="panel-subtitle">Ukur proporsi kemiripan terhadap korpus mahasiswa, jurnal, dan web.</div>
                   </div>
                 </div>
 
@@ -517,39 +517,78 @@ export function renderStudioHtml(devUiMode = false): string {
 
                 <div class="form-group" style="margin-top: 14px;">
                   <label for="turnitinText">Atau tempel teks naskah</label>
-                  <textarea id="turnitinText" rows="4" placeholder="Tempel teks naskah..."></textarea>
+                  <textarea id="turnitinText" rows="5" placeholder="Tempel teks naskah..."></textarea>
+                </div>
+                <div class="turnitin-options-box">
+                  <div style="font-weight: 600; color: var(--ink-secondary); margin-bottom: 6px;">Filter Turnitin Kampus:</div>
+                  <label class="turnitin-opt-row">
+                    <input type="checkbox" id="chkTurnitinExcludeBib" checked />
+                    <span>Kecualikan Daftar Pustaka (Exclude Bibliography)</span>
+                  </label>
+                  <label class="turnitin-opt-row">
+                    <input type="checkbox" id="chkTurnitinExcludeQuotes" />
+                    <span>Kecualikan Tanda Petik (Exclude Quotes)</span>
+                  </label>
                 </div>
 
                 <button type="button" id="btnTurnitin" class="btn-primary" onclick="TGSDORK.executeTurnitinScan()">Periksa Skor Kemiripan</button>
+                <button type="button" id="btnTurnitinBackToResult" class="action-btn" style="display: none; width: 100%; margin-top: 8px; justify-content: center;" onclick="TGSDORK.showLastTurnitinResult()">Lihat Laporan Terakhir &rarr;</button>
               </div>
 
-              <div class="panel">
-                <div class="panel-header">
-                  <div>
-                    <div class="panel-title">Laporan Kemiripan</div>
-                    <div class="panel-subtitle">Estimasi indeks kemiripan dan variasi struktur kalimat.</div>
+              <div class="panel turnitin-report-panel" id="turnitinReportPanel">
+                <div class="panel-header turnitin-report-header">
+                  <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <button type="button" class="action-btn" id="btnTurnitinNewScan" style="display: none;" onclick="TGSDORK.resetTurnitinView()">&larr; Uji Berkas Lain</button>
+                    <div>
+                      <div class="panel-title" id="turnitinReportMainTitle">Laporan Kemiripan Turnitin</div>
+                      <div class="panel-subtitle" id="turnitinDocFilename">Analisis kemiripan terhadap repositori mahasiswa, jurnal ilmiah, dan web.</div>
+                    </div>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <div class="turnitin-view-switch" id="turnitinViewSwitch" style="display: none;">
+                      <button type="button" class="turnitin-tab-btn active" id="btnTurnitinViewDoc" onclick="TGSDORK.setTurnitinDisplayMode('doc')">Tampilan Dokumen</button>
+                      <button type="button" class="turnitin-tab-btn" id="btnTurnitinViewText" onclick="TGSDORK.setTurnitinDisplayMode('text')">Laporan Ringkas</button>
+                    </div>
+                    <button type="button" class="action-btn" id="btnToggleSourcesPane" style="display: none;" onclick="TGSDORK.toggleTurnitinSourcesPane()">Sembunyikan Sumber</button>
+                    <button type="button" class="action-btn accent" id="btnDoTurnitinParaphrase" onclick="TGSDORK.triggerTurnitinParaphrase()">Parafrase Otomatis</button>
+                    <button type="button" class="action-btn" onclick="TGSDORK.copyTurnitinReport()">Salin</button>
                   </div>
                 </div>
 
                 <div class="report-wrap" id="turnitinReportArea" style="margin-top: 0;">
-                  <div class="score-summary-bar">
-                    <span style="font-size: 12.5px; font-weight: 600; color: var(--ink-secondary);">Aksi Naskah</span>
-                    <div class="actions-row nowrap">
-                      <button type="button" class="action-btn accent" id="btnDoTurnitinParaphrase" onclick="TGSDORK.triggerTurnitinParaphrase()">Parafrase Otomatis</button>
-                      <button type="button" class="action-btn" onclick="TGSDORK.copyTurnitinReport()">Salin</button>
-                    </div>
-                  </div>
-                  <div class="metric-pair">
+                  <div class="turnitin-metrics-quad">
                     <div class="metric-box">
-                      <div class="metric-box-label">Kemiripan</div>
+                      <div class="metric-box-label">Indeks Kemiripan</div>
                       <div class="metric-box-value" id="simScoreBadge">--%</div>
                       <div class="metric-box-note" id="simStatusBadge">Batas aman &lt; 20%</div>
                     </div>
                     <div class="metric-box">
-                      <div class="metric-box-label">Pola Monoton</div>
-                      <div class="metric-box-value" id="aiScoreBadge">--%</div>
-                      <div class="metric-box-note" id="aiStatusBadge">Variasi kalimat</div>
+                      <div class="metric-box-label">Internet Sources</div>
+                      <div class="metric-box-value" id="simInternetBadge" style="color: #38bdf8;">--%</div>
+                      <div class="metric-box-note">Web &amp; Ensiklopedia</div>
                     </div>
+                    <div class="metric-box">
+                      <div class="metric-box-label">Publications</div>
+                      <div class="metric-box-value" id="simPubBadge" style="color: #60a5fa;">--%</div>
+                      <div class="metric-box-note">Jurnal SINTA/DOAJ</div>
+                    </div>
+                    <div class="metric-box">
+                      <div class="metric-box-label">Student Papers</div>
+                      <div class="metric-box-value" id="simStudentBadge" style="color: #c084fc;">--%</div>
+                      <div class="metric-box-note">Korpus Mahasiswa</div>
+                    </div>
+                  </div>
+
+                  <div class="turnitin-category-bar" id="turnitinCategoryBar" style="display: none;">
+                    <div class="turnitin-cat-seg internet" id="catSegInternet" style="width: 0%;"></div>
+                    <div class="turnitin-cat-seg pub" id="catSegPub" style="width: 0%;"></div>
+                    <div class="turnitin-cat-seg student" id="catSegStudent" style="width: 0%;"></div>
+                  </div>
+                  <div class="turnitin-cat-legend" id="turnitinCategoryLegend" style="display: none;">
+                    <span class="turnitin-legend-item"><span class="turnitin-legend-dot internet"></span> Internet (<span id="legInternetPct">0%</span>)</span>
+                    <span class="turnitin-legend-item"><span class="turnitin-legend-dot pub"></span> Publikasi (<span id="legPubPct">0%</span>)</span>
+                    <span class="turnitin-legend-item"><span class="turnitin-legend-dot student"></span> Naskah Mahasiswa (<span id="legStudentPct">0%</span>)</span>
+                    <span class="turnitin-legend-item" style="margin-left: auto; color: var(--ink-muted);">AI Writing: <strong id="aiScoreBadge" style="color: #fff;">--%</strong> (<span id="aiStatusBadge">Alami</span>)</span>
                   </div>
 
                   <div class="result-banner" id="turnitinParaphraseBanner" style="display: none;">
@@ -559,6 +598,28 @@ export function renderStudioHtml(devUiMode = false): string {
                       <a class="action-btn accent" id="dlTurnitinDocx" href="#" download>DOCX</a>
                       <a class="action-btn" id="dlTurnitinPdf" href="#" download>PDF</a>
                       <a class="action-btn" id="dlTurnitinMd" href="#" target="_blank">Markdown</a>
+                    </div>
+                  </div>
+
+                  <!-- Dual Interactive Turnitin Viewer -->
+                  <div id="turnitinViewerDual" class="turnitin-dual-view" style="display: none;">
+                    <div class="turnitin-doc-pane" id="turnitinDocPane">
+                      <div id="turnitinAnnotatedDoc"></div>
+                    </div>
+                    <div class="turnitin-sources-pane" id="turnitinSourcesPane">
+                      <div class="turnitin-sources-header">
+                        <span class="turnitin-sources-title">Primary Sources</span>
+                        <span class="turnitin-sources-count" id="turnitinSourcesCount">0 Sumber</span>
+                      </div>
+                      <div class="turnitin-source-filters" id="turnitinSourceFilters">
+                        <button type="button" class="t-filter-chip active" data-src-filter="all" onclick="TGSDORK.filterTurnitinSources('all')">Semua</button>
+                        <button type="button" class="t-filter-chip" data-src-filter="publication" onclick="TGSDORK.filterTurnitinSources('publication')">Publikasi</button>
+                        <button type="button" class="t-filter-chip" data-src-filter="student_paper" onclick="TGSDORK.filterTurnitinSources('student_paper')">Mahasiswa</button>
+                        <button type="button" class="t-filter-chip" data-src-filter="internet" onclick="TGSDORK.filterTurnitinSources('internet')">Internet</button>
+                      </div>
+                      <div id="turnitinSourcesList" class="turnitin-sources-list">
+                        <div style="font-size: 11.5px; color: var(--ink-muted); padding: 8px 0;">Belum ada sumber kemiripan.</div>
+                      </div>
                     </div>
                   </div>
 

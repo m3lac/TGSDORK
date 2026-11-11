@@ -1,7 +1,7 @@
 import * as cheerio from 'cheerio';
 import { loadConfig } from '../core/config.js';
 import { logger } from '../core/logger.js';
-import { searchLocalJournals } from './local-journal.js';
+import { searchLocalJournals, searchLocalJournalExactPhrases } from './local-journal.js';
 import type { SourceItem } from '../types/index.js';
 
 function sleep(ms: number) {
@@ -56,11 +56,15 @@ const BLOCKED_DOMAINS = [
   'forestapp',
 ];
 
-export function isChineseOrGarbage(url: string, title: string, snippet = ''): boolean {
+export function isChineseOrGarbage(url: string, title: string, snippet = '', allowGeneralWeb = false): boolean {
   const u = (url || '').toLowerCase();
   const t = (title || '').toLowerCase();
   if (/^https?:\/\/[^/]+\.cn(?:\/|:|$)/i.test(u)) return true;
-  if (BLOCKED_DOMAINS.some((d) => u.includes(d))) return true;
+  if (!allowGeneralWeb && BLOCKED_DOMAINS.some((d) => u.includes(d))) return true;
+  if (allowGeneralWeb) {
+    const hardSpam = ['douyin.com', 'bilibili.com', 'tiktok.com', 'taobao.com', 'jd.com', 'forestapp'];
+    if (hardSpam.some((d) => u.includes(d))) return true;
+  }
   if (CJK_SCRIPT_RE.test(title || '') || CJK_SCRIPT_RE.test(snippet || '')) return true;
   if (t.includes('forestapp')) return true;
   if (u.includes('/login') || u.includes('/signin') || u.includes('/cas/') || u.includes('/sso/') || u.includes('/auth/')) return true;
@@ -707,4 +711,88 @@ export async function searchDork(
   addUniqueSources(combined, webHits);
 
   return combined.slice(0, maxResults);
+}
+
+/**
+ * Pencarian multi-sumber khusus Turnitin similarity checker:
+ * Mencakup jurnal lokal, DOAJ, Crossref, OpenAlex, dan web terbuka/repositori.
+ */
+export async function searchPlagiarismSources(
+  queries: string[],
+  maxTotal = 10
+): Promise<SourceItem[]> {
+  const combined: SourceItem[] = [];
+  const seenUrls = new Set<string>();
+
+  const addItems = (items: SourceItem[]) => {
+    for (const it of items) {
+      if (combined.length >= maxTotal) break;
+      const cleanUrl = it.url.toLowerCase().split('#')[0].replace(/\/+$/, '');
+      if (seenUrls.has(cleanUrl)) continue;
+      seenUrls.add(cleanUrl);
+      combined.push(it);
+    }
+  };
+
+  // 1. Fast local journals (~/.tgsdork/journals.db) — synchronous SQLite, 0ms latency
+  try {
+    const exactLocal = searchLocalJournalExactPhrases(queries, 4);
+    addItems(exactLocal);
+  } catch {}
+
+  for (const q of queries.slice(0, 3)) {
+    try {
+      const local = searchLocalJournals(q, 2);
+      addItems(local);
+    } catch {}
+    if (combined.length >= maxTotal) return combined;
+  }
+
+  // 2. Query academic APIs concurrently with strict timeout
+  const academicTasks = queries.slice(0, 3).map(async (q) => {
+    const hits: SourceItem[] = [];
+    try {
+      const [doaj, cr, oa] = await Promise.allSettled([
+        searchIndonesianDOAJ(q, 2),
+        searchIndonesianCrossref(q, 2),
+        searchIndonesianOpenAlex(q, 2),
+      ]);
+      if (doaj.status === 'fulfilled') hits.push(...doaj.value);
+      if (cr.status === 'fulfilled') hits.push(...cr.value);
+      if (oa.status === 'fulfilled') hits.push(...oa.value);
+    } catch {}
+    return hits;
+  });
+
+  const academicResults = await Promise.allSettled(academicTasks);
+  for (const r of academicResults) {
+    if (r.status === 'fulfilled') addItems(r.value);
+  }
+
+  if (combined.length >= maxTotal) return combined;
+
+  // 3. National Indonesian Campus Repositories & Aggregators Pass
+  for (const q of queries.slice(0, 2)) {
+    const cleanQ = cleanAcademicKeywords(q);
+    if (!cleanQ) continue;
+
+    // Dork 1: All Indonesian University Repositories (EPrints, DSpace, Digilib, ETD, Theses)
+    const repoDork = `"${cleanQ}" site:ac.id (inurl:repository OR inurl:eprints OR inurl:digilib OR inurl:etd OR inurl:etheses OR inurl:dspace OR inurl:skripsi)`;
+    try {
+      const repoHits = await searchWebFallback(repoDork, { maxResults: 3, delayMs: 250 });
+      addItems(repoHits);
+    } catch {}
+
+    if (combined.length >= maxTotal) break;
+
+    // Dork 2: National portals (Garuda, Neliti, OneSearch) & direct journal papers
+    const portalDork = `"${cleanQ}" (site:garuda.kemdikbud.go.id OR site:neliti.com OR site:onesearch.id OR site:ac.id)`;
+    try {
+      const portalHits = await searchWebFallback(portalDork, { maxResults: 3, delayMs: 250 });
+      addItems(portalHits);
+    } catch {}
+
+    if (combined.length >= maxTotal) break;
+  }
+  return combined;
 }

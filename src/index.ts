@@ -1,9 +1,11 @@
 #!/usr/bin/env node
+import fs from 'node:fs';
+import path from 'node:path';
 import { Command } from 'commander';
 import * as p from '@clack/prompts';
 import pc from 'picocolors';
 import { loadConfig, saveConfig, getConfigPath } from './core/config.js';
-import { listCheckpoints, loadCheckpoint, initCheckpoint } from './core/checkpoint.js';
+import { listCheckpoints, loadCheckpoint, initCheckpoint, getTaskDir } from './core/checkpoint.js';
 import { runTaskPipeline } from './pipelines/runner.js';
 import { exportToMarkdown } from './exporter/markdown.js';
 import { exportToDocx } from './exporter/docx-builder.js';
@@ -11,7 +13,8 @@ import { exportToMarpSlide } from './exporter/slide-builder.js';
 import { exportToPptx } from './exporter/pptx-builder.js';
 import { exportToBibtex } from './exporter/bibtex.js';
 import { copyToDocuments } from './core/downloads.js';
-import { reviewTask, reviewFile, reviseTask, autoReviseTask } from './pipelines/reviewer.js';
+import { reviewTask, reviewFile, reviseTask, autoReviseTask, readTextFromFile } from './pipelines/reviewer.js';
+import { scanTurnitinWithGemini } from './pipelines/turnitin.js';
 import { startServer } from './server/app.js';
 import { startChat } from './chat.js';
 import { logger } from './core/logger.js';
@@ -245,6 +248,46 @@ program
       await autoReviseTask(taskId);
     } catch (err) {
       logger.error(`Auto-revise gagal: ${String(err)}`);
+    }
+  });
+
+// CLI Command: turnitin
+program
+  .command('turnitin <target>')
+  .description('Uji kemiripan naskah ala Turnitin (korpus mahasiswa, repositori, dan jurnal)')
+  .option('--no-bib', 'Jangan kecualikan daftar pustaka (default mengecualikan daftar pustaka)')
+  .option('-q, --quotes', 'Kecualikan teks dalam tanda petik')
+  .action(async (target, opts) => {
+    try {
+      const isFile = target.includes('/') || target.includes('.');
+      let text = '';
+      let title = target;
+      if (isFile) {
+        text = await readTextFromFile(target);
+      } else {
+        const state = loadCheckpoint(target);
+        if (!state) {
+          logger.error(`Tugas "${target}" tidak ditemukan.`);
+          return;
+        }
+        title = state.topic;
+        const mdOut = path.join(getTaskDir(state.id), 'output.md');
+        if (fs.existsSync(mdOut)) {
+          text = fs.readFileSync(mdOut, 'utf-8');
+        } else {
+          text = state.sections.map((s) => `## ${s.title}\n\n${s.content}`).join('\n\n');
+        }
+      }
+
+      logger.info(`Memindai kemiripan Turnitin untuk "${title}"...`);
+      const scan = await scanTurnitinWithGemini(title, text, {
+        excludeBibliography: opts.bib !== false,
+        excludeQuotes: Boolean(opts.quotes),
+      });
+
+      console.log('\n' + scan.report + '\n');
+    } catch (err) {
+      logger.error(`Pemeriksaan kemiripan gagal: ${String(err)}`);
     }
   });
 

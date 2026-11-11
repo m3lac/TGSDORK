@@ -42,13 +42,15 @@ export function searchLocalJournals(query: string, maxResults = 4): SourceItem[]
   const like = uniq.map((w) => `%${w}%`);
 
   const where = uniq.map(() => '(title LIKE ? OR abstract LIKE ?)').join(' OR ');
-  const scoreExpr = uniq.map(() => '(CASE WHEN title LIKE ? THEN 5 ELSE 0 END)').join(' + ');
-  const params = [...like.flatMap((l) => [l, l]), ...like, maxResults];
+  const scoreExpr = uniq
+    .map(() => '(CASE WHEN title LIKE ? THEN 5 ELSE 0 END) + (CASE WHEN abstract LIKE ? THEN 2 ELSE 0 END)')
+    .join(' + ');
+  const params = [...like.flatMap((l) => [l, l]), ...like.flatMap((l) => [l, l]), maxResults];
 
   try {
     const rows = conn
       .prepare(
-        `SELECT doi, title, year, substr(abstract, 1, 700) AS snippet, (${scoreExpr}) AS score
+        `SELECT doi, title, year, substr(abstract, 1, 1500) AS snippet, (${scoreExpr}) AS score
          FROM works
          WHERE (${where}) AND abstract IS NOT NULL
          ORDER BY score DESC, year DESC
@@ -77,4 +79,64 @@ export function searchLocalJournals(query: string, maxResults = 4): SourceItem[]
 
 export function localJournalAvailable(): boolean {
   return fs.existsSync(DB_PATH);
+}
+
+/**
+ * Pencarian frasa langsung pada abstrak jurnal lokal untuk deteksi plagiarisme Turnitin.
+ */
+export function searchLocalJournalExactPhrases(phrases: string[], maxResults = 6): SourceItem[] {
+  const conn = open();
+  if (!conn || phrases.length === 0) return [];
+
+  const results: SourceItem[] = [];
+  const seenDois = new Set<string>();
+
+  for (const phrase of phrases) {
+    if (results.length >= maxResults) break;
+    const cleanWords = phrase
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .split(/\s+/)
+      .filter(Boolean);
+    if (cleanWords.length < 4) continue;
+
+    const subPhrase = cleanWords.slice(0, 5).join(' ');
+    const contentWords = cleanWords.filter((w) => w.length > 3).slice(0, 4);
+    type LocalWorkRow = { doi?: string; title?: string; year?: number; abstract?: string };
+    let rows: LocalWorkRow[] = [];
+
+    try {
+      rows = conn
+        .prepare(`SELECT doi, title, year, abstract FROM works WHERE lower(abstract) LIKE ? LIMIT 3`)
+        .all(`%${subPhrase}%`) as LocalWorkRow[];
+
+      if (rows.length === 0 && contentWords.length >= 3) {
+        const where = contentWords.map(() => 'lower(abstract) LIKE ?').join(' AND ');
+        const params = contentWords.map((w) => `%${w}%`);
+        rows = conn
+          .prepare(`SELECT doi, title, year, abstract FROM works WHERE ${where} LIMIT 3`)
+          .all(...params) as LocalWorkRow[];
+      }
+
+      for (const r of rows) {
+        if (!r.doi || !r.title || seenDois.has(r.doi)) continue;
+        seenDois.add(r.doi);
+        results.push({
+          id: `local-exact-${results.length}-${Math.random().toString(36).slice(2, 7)}`,
+          title: r.title,
+          url: r.doi,
+          snippet: (r.abstract || '').slice(0, 800),
+          content: r.abstract || '',
+          citation: `(Jurnal Nasional, ${r.year || '2024'})`,
+          fullRef: `${r.title}. (${r.year || '2024'}). *Jurnal Ilmiah Nasional Indonesia*. ${r.doi}`,
+          fileType: 'html',
+          year: String(r.year || ''),
+          doi: r.doi.replace(/^https?:\/\/(?:dx\.)?doi\.org\//i, ''),
+          doiVerified: true,
+        });
+      }
+    } catch {}
+  }
+
+  return results.slice(0, maxResults);
 }

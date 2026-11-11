@@ -105,3 +105,49 @@ export interface UnifiedActiveJob {
   error?: string;
   resultUrl?: string;
 }
+
+export type TurnitinSourceType = 'internet' | 'publication' | 'student_paper';
+
+export interface TurnitinMatchSource {
+  id: number;
+  color: string;
+  title: string;
+  institution?: string;
+  domain?: string;
+  year?: string;
+  doi?: string;
+  url?: string;
+  type: TurnitinSourceType;
+  typeLabel: string;
+  similarityPercent: number;
+  matchCount: number;
+  snippet?: string;
+  matchedSentences?: string[];
+}
+
+export interface TurnitinSentenceMatch {
+  sentenceIndex: number;
+  sentence: string;
+  sourceId: number;
+  similarityScore: number;
+  matchedSnippet?: string;
+}
+
+export interface TurnitinScanOptions {
+  excludeBibliography?: boolean;
+  excludeQuotes?: boolean;
+}
+
+export interface TurnitinScanResult {
+  similarityScore: number;
+  aiScore: number;
+  report: string;
+  flaggedSentences: string[];
+  sources?: TurnitinMatchSource[];
+  annotatedHtml?: string;
+  metricsBreakdown?: {
+    internetSources: number;
+    studentPapers: number;
+    publications: number;
+  };
+}
