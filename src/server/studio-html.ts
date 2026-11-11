@@ -17,7 +17,7 @@ export function renderStudioHtml(devUiMode = false): string {
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/public/styles.css?v=20261112_02" />
+  <link rel="stylesheet" href="/public/styles.css?v=20261112_03" />
 </head>
 <body class="studio-body">
   <a href="#mainApp" class="skip-link">Lewati ke ruang kerja utama</a>
@@ -201,6 +201,7 @@ export function renderStudioHtml(devUiMode = false): string {
                 <div class="ov-quick-text">
                   <strong data-i18n="quick_gen_title">Susun Naskah</strong>
                   <span data-i18n="quick_gen_sub">Makalah, Skripsi &amp; Tinjauan Pustaka</span>
+                </div>
               </button>
 
               <button type="button" class="ov-quick-card" onclick="TGSDORK.switchNav('review')">
@@ -210,6 +211,7 @@ export function renderStudioHtml(devUiMode = false): string {
                 <div class="ov-quick-text">
                   <strong data-i18n="quick_rev_title">Audit &amp; Revisi</strong>
                   <span data-i18n="quick_rev_sub">Evaluasi mutu &amp; perbaikan otomatis</span>
+                </div>
               </button>
 
               <button type="button" class="ov-quick-card" onclick="TGSDORK.switchNav('turnitin')">
@@ -219,6 +221,7 @@ export function renderStudioHtml(devUiMode = false): string {
                 <div class="ov-quick-text">
                   <strong data-i18n="quick_turnitin_title">Uji Kemiripan</strong>
                   <span data-i18n="quick_turnitin_sub">Cek skor kemiripan &amp; parafrase</span>
+                </div>
               </button>
 
               <button type="button" class="ov-quick-card" onclick="TGSDORK.switchNav('pptx')">
@@ -228,6 +231,7 @@ export function renderStudioHtml(devUiMode = false): string {
                 <div class="ov-quick-text">
                   <strong data-i18n="quick_pptx_title">PowerPoint</strong>
                   <span data-i18n="quick_pptx_sub">Buat salindia &amp; catatan pemateri</span>
+                </div>
               </button>
             </div>
 
@@ -881,7 +885,7 @@ export function renderStudioHtml(devUiMode = false): string {
   <div id="toastStack" class="toast-stack" aria-live="polite"></div>
 
   <script>window.__TGSDORK_DEV_UI__ = ${devUiMode ? 'true' : 'false'};</script>
-  <script src="/public/app.js?v=20261112_02"></script>
+  <script src="/public/app.js?v=20261112_03"></script>
 </body>
 </html>`;
 }

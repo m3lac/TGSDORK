@@ -1214,7 +1214,7 @@
     };
 
     setTxt('ovTotalDocs', total);
-    setTxt('ovCompletedRate', done + ' selesai');
+    setTxt('ovCompletedRate', done + (getStudioLanguage() === 'en' ? ' completed' : ' selesai'));
     setTxt('ovTotalSources', totalSources);
     setTxt('ovTotalSections', totalSections);
 
@@ -1226,10 +1226,11 @@
     const box = document.getElementById('ovRecentList');
     if (!box) return;
     if (!Array.isArray(tasks) || tasks.length === 0) {
+      const isEn = getStudioLanguage() === 'en';
       box.innerHTML =
         '<div class="empty-state" style="padding:24px 16px;">' +
-        '<strong>Belum ada naskah tersimpan.</strong>' +
-        '<p style="margin-top:4px;font-size:12.5px;">Klik <strong>Susun Naskah</strong> di atas untuk membuat dokumen pertama Anda.</p>' +
+        '<strong>' + (isEn ? 'No manuscripts saved yet.' : 'Belum ada naskah tersimpan.') + '</strong>' +
+        '<p style="margin-top:4px;font-size:12.5px;">' + (isEn ? 'Click <strong>Draft Manuscript</strong> above to create your first document.' : 'Klik <strong>Susun Naskah</strong> di atas untuk membuat dokumen pertama Anda.') + '</p>' +
         '</div>';
       return;
     }
@@ -1610,6 +1611,10 @@
     const sub = document.getElementById('stageSubtitle');
     if (st) st.textContent = meta.title;
     if (sub) sub.textContent = meta.subtitle;
+
+    if (typeof cachedTasks !== 'undefined' && Array.isArray(cachedTasks)) {
+      renderOverviewDashboard(cachedTasks);
+    }
   }
 
   function setLanguage(lang) {
