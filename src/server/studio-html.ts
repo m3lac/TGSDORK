@@ -17,7 +17,7 @@ export function renderStudioHtml(devUiMode = false): string {
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/public/styles.css?v=20261112_08" />
+  <link rel="stylesheet" href="/public/styles.css?v=20261112_09" />
 </head>
 <body class="studio-body">
   <a href="#mainApp" class="skip-link">Lewati ke ruang kerja utama</a>
@@ -36,6 +36,12 @@ export function renderStudioHtml(devUiMode = false): string {
                 <span class="brand-name">TGSDORK</span>
               </span>
             </a>
+            <div class="brand-mobile-actions">
+              <span class="status-dot" id="wsDotMobile" title="Status Server"></span>
+              <button type="button" class="brand-mobile-exit-btn" title="Logout dari Studio" aria-label="Logout dari Studio" onclick="TGSDORK.logout()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 4h4a2 2 0 012 2v12a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+              </button>
+            </div>
             <button
               type="button"
               class="rail-toggle-btn"
@@ -116,21 +122,25 @@ export function renderStudioHtml(devUiMode = false): string {
             <p id="stageSubtitle">Ringkasan riset dan dokumen akademik Anda.</p>
           </div>
           <div class="topbar-actions">
-            <div id="userBadge" class="user-chip" style="display: none;">
-              <span class="user-avatar-orb" id="userAvatarInitials" aria-hidden="true">TG</span>
-              <span class="user-chip-email" id="userEmailLabel">Akun</span>
+            <div class="topbar-actions-left">
+              <div id="userBadge" class="user-chip" style="display: none;">
+                <span class="user-avatar-orb" id="userAvatarInitials" aria-hidden="true">TG</span>
+                <span class="user-chip-email" id="userEmailLabel">Akun</span>
+              </div>
+              <div class="studio-lang-switch" role="group" aria-label="Pengalih Bahasa">
+                <button type="button" class="studio-lang-btn" data-lang-switch="en" onclick="TGSDORK.setLanguage('en')">EN</button>
+                <button type="button" class="studio-lang-btn active" data-lang-switch="id" onclick="TGSDORK.setLanguage('id')">ID</button>
+              </div>
             </div>
-            <div class="studio-lang-switch" role="group" aria-label="Pengalih Bahasa">
-              <button type="button" class="studio-lang-btn" data-lang-switch="en" onclick="TGSDORK.setLanguage('en')">EN</button>
-              <button type="button" class="studio-lang-btn active" data-lang-switch="id" onclick="TGSDORK.setLanguage('id')">ID</button>
+            <div class="topbar-actions-right">
+              <button type="button" class="btn-pill btn-white sm" id="headerContactBtn" onclick="TGSDORK.openContactModal()" title="Kontak &amp; Bantuan">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+                <span data-i18n="top_contact">Kontak</span>
+              </button>
+              <button type="button" class="btn-pill btn-white sm" id="headerNewDocBtn" onclick="TGSDORK.switchNav('generate'); document.getElementById('topic')?.focus();">
+                <span data-i18n="top_new_doc">+ Naskah Baru</span>
+              </button>
             </div>
-            <button type="button" class="btn-pill btn-white sm" id="headerContactBtn" onclick="TGSDORK.openContactModal()" title="Kontak &amp; Bantuan">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
-              <span data-i18n="top_contact">Kontak</span>
-            </button>
-            <button type="button" class="btn-pill btn-white sm" id="headerNewDocBtn" onclick="TGSDORK.switchNav('generate'); document.getElementById('topic')?.focus();">
-              <span data-i18n="top_new_doc">+ Naskah Baru</span>
-            </button>
           </div>
         </header>
 
@@ -783,7 +793,7 @@ export function renderStudioHtml(devUiMode = false): string {
           <a class="action-btn accent" id="readerDocxDl" href="#" download>DOCX</a>
           <a class="action-btn" id="readerPdfDl" href="#" download>PDF</a>
           <button type="button" class="action-btn" id="readerCopyBtn" onclick="TGSDORK.copyReaderText()">Salin Teks</button>
-          <button type="button" class="icon-btn" aria-label="Tutup pratinjau naskah" onclick="TGSDORK.closeDocReader()">
+          <button type="button" class="icon-btn reader-close-btn" aria-label="Tutup pratinjau naskah" onclick="TGSDORK.closeDocReader()">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
           </button>
         </div>
@@ -885,7 +895,7 @@ export function renderStudioHtml(devUiMode = false): string {
   <div id="toastStack" class="toast-stack" aria-live="polite"></div>
 
   <script>window.__TGSDORK_DEV_UI__ = ${devUiMode ? 'true' : 'false'};</script>
-  <script src="/public/app.js?v=20261112_08"></script>
+  <script src="/public/app.js?v=20261112_09"></script>
 </body>
 </html>`;
 }

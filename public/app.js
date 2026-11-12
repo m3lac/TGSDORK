@@ -465,6 +465,9 @@
       const isTarget = b.getAttribute('data-tab') === targetTab;
       b.classList.toggle('active', isTarget);
       b.setAttribute('aria-current', isTarget ? 'page' : 'false');
+      if (isTarget && window.innerWidth <= 820 && typeof b.scrollIntoView === 'function') {
+        b.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
+      }
     });
 
     const currentLang = getStudioLanguage();
@@ -1987,7 +1990,7 @@
           .join('');
 
         const reviseDrawerHtml = isDone
-          ? '<tr id="revRow-' + idAttr + '" style="display:' + (isRevOpen ? 'table-row' : 'none') + ';">' +
+          ? '<tr id="revRow-' + idAttr + '" class="bento-drawer-row" style="display:' + (isRevOpen ? 'table-row' : 'none') + ';">' +
             '<td colspan="6" style="border-top:none;padding-top:0;">' +
             '<div class="drawer-panel">' +
             '<div class="actions-row">' +
@@ -2211,8 +2214,10 @@
 
       ws.onopen = function () {
         const dot = document.getElementById('wsDot');
+        const dotMobile = document.getElementById('wsDotMobile');
         const txt = document.getElementById('wsText');
         if (dot) dot.classList.remove('offline');
+        if (dotMobile) dotMobile.classList.remove('offline');
         if (txt) txt.textContent = 'Terhubung ke server';
         const t = getAuthToken();
         if (t) {
@@ -2224,8 +2229,10 @@
 
       ws.onclose = function () {
         const dot = document.getElementById('wsDot');
+        const dotMobile = document.getElementById('wsDotMobile');
         const txt = document.getElementById('wsText');
         if (dot) dot.classList.add('offline');
+        if (dotMobile) dotMobile.classList.add('offline');
         if (txt) txt.textContent = 'Menyambung ulang...';
         appWs = null;
         setTimeout(initWebSocket, 3000);
