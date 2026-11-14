@@ -112,9 +112,6 @@
       contact_email_label: 'Official Email',
       contact_email_note: 'Direct inbox for inquiries, enterprise access, and research collaboration.',
       contact_email_btn: 'Send Email',
-      contact_ig_label: 'Instagram',
-      contact_ig_note: 'Connect directly on Instagram for product updates, discussions, and quick DMs.',
-      contact_ig_btn: 'Follow',
     },
     id: {
       skip_link: 'Lewati ke konten utama',
@@ -227,9 +224,6 @@
       contact_email_label: 'Email Resmi',
       contact_email_note: 'Kotak masuk langsung untuk pertanyaan, akses kerja sama, dan kolaborasi riset.',
       contact_email_btn: 'Kirim Email',
-      contact_ig_label: 'Instagram',
-      contact_ig_note: 'Terhubung langsung di Instagram untuk kabar pembaruan, diskusi, atau DM.',
-      contact_ig_btn: 'Follow',
     },
   };
 

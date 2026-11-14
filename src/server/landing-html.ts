@@ -481,21 +481,6 @@ export function renderLandingHtml(devUiMode = false): string {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17L17 7M9 7h8v8"/></svg>
             </span>
           </a>
-
-          <a href="https://instagram.com/nelosif_" target="_blank" rel="noopener noreferrer" class="lp-contact-card instagram">
-            <div class="lp-contact-icon ig">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
-            </div>
-            <div class="lp-contact-info">
-              <span class="lp-contact-type" data-i18n="contact_ig_label">Instagram</span>
-              <strong class="lp-contact-val">@nelosif_</strong>
-              <p class="lp-contact-note" data-i18n="contact_ig_note">Connect directly on Instagram for product updates, discussions, and quick DMs.</p>
-            </div>
-            <span class="lp-contact-action">
-              <span data-i18n="contact_ig_btn">Follow</span>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17L17 7M9 7h8v8"/></svg>
-            </span>
-          </a>
         </div>
       </div>
     </section>
@@ -516,7 +501,6 @@ export function renderLandingHtml(devUiMode = false): string {
         <a href="/studio?tab=pptx" data-i18n="foot_pptx">PowerPoint</a>
         <a href="/studio?tab=workspace" data-i18n="foot_archive">Archive</a>
         <a href="mailto:founder@tgsdork.com">founder@tgsdork.com</a>
-        <a href="https://instagram.com/nelosif_" target="_blank" rel="noopener noreferrer">@nelosif_</a>
       </div>
     </div>
   </footer>

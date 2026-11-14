@@ -272,10 +272,6 @@ export function renderStudioHtml(devUiMode = false): string {
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><polyline points="3 7 12 13 21 7"/></svg>
                     <span>founder@tgsdork.com</span>
                   </a>
-                  <a href="https://instagram.com/nelosif_" target="_blank" rel="noopener noreferrer" class="btn-pill btn-hot-pink sm">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
-                    <span>@nelosif_</span>
-                  </a>
                 </div>
               </div>
             </div>
@@ -874,19 +870,6 @@ export function renderStudioHtml(devUiMode = false): string {
             <button type="button" class="btn-pill btn-white sm" data-i18n="modal_copy_btn" onclick="TGSDORK.copyFounderEmail(this)">Salin</button>
             <a href="mailto:founder@tgsdork.com" class="btn-pill btn-hot-pink sm" data-i18n="modal_send_btn">Kirim</a>
           </div>
-        </div>
-
-        <div class="contact-modal-item">
-          <div class="contact-modal-item-left">
-            <div class="contact-modal-icon pink">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
-            </div>
-            <div class="contact-modal-meta">
-              <span>Instagram</span>
-              <strong>@nelosif_</strong>
-            </div>
-          </div>
-          <a href="https://instagram.com/nelosif_" target="_blank" rel="noopener noreferrer" class="btn-pill btn-hot-pink sm" data-i18n="modal_open_btn">Buka</a>
         </div>
       </div>
     </div>
